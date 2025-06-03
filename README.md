@@ -49,18 +49,14 @@ D5Collect是一个基于Flask的Web应用，专为第五人格游戏玩家设计
    ```bash
    gunicorn -c gunicorn_config.py app:app
    ```
-   或直接使用：
-   ```bash
-   gunicorn --workers=4 --bind=0.0.0.0:8000 app:app
-   ```
 
 2. 在浏览器中访问：
-   - 开发环境：`http://127.0.0.1:5000/`
+   - 开发环境：`http://127.0.0.1:9876/`
    - 生产环境：`http://127.0.0.1:9876/`
 
 3. 在搜索框中输入想要查询的文字，点击"查找"按钮
 
-4. 查看匹配结果，可以使用筛选功能按品质或角色筛选
+4. 查看匹配结果，可以使用筛选功能按查找到的品质或角色筛选
 
 ## 数据说明
 
@@ -79,9 +75,9 @@ D5Collect是一个基于Flask的Web应用，专为第五人格游戏玩家设计
 
 ## 依赖项
 
-- Flask==2.0.1
-- pypinyin==0.47.1
-- gunicorn==23.0.0
+- Flask
+- pypinyin
+- gunicorn
 
 ## 贡献指南
 
