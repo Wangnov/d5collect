@@ -1,0 +1,74 @@
+# Python字节码
+__pycache__/
+*.py[cod]
+*$py.class
+test*.py
+.python-version
+
+# 分发与打包
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+.venv/
+venv/
+ENV/
+
+# 测试与覆盖率报告
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+test*.*
+
+# 日志
+*.log
+OGLogs/
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.cursor/
+.cursorignore
+.trae/
+
+# macOS
+.DS_Store
+
+# 本地配置文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# uv
+uv.lock
+
+# 配置文件
+main_config.toml
+
+# 旧版本文件
+old/
