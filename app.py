@@ -2,7 +2,6 @@ import logging
 from flask import Flask, render_template, request
 from pinyin import get_matching_costumes
 import json
-from .tasks import update_costumes_task
 
 # 配置日志
 logging.basicConfig(
@@ -33,11 +32,6 @@ def index():
     return render_template('index.html', 
                           input_text=input_text,
                           result=result)
-
-@app.route('/update_data_async', methods=['POST'])
-def update_data_async():
-    update_costumes_task.delay()
-    return "Data update initiated in background!", 202
 
 if __name__ == '__main__':
     app.run(debug=True, port=9877)

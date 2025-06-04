@@ -211,12 +211,10 @@ def collect_all_costume_data(total_count):
             offset += limit
             page += 1
 
-            # 每次请求后等待一段时间，避免对服务器造成过大压力
-            # 智能限速：根据请求次数和总页数动态调整等待时间
-            # 假设每页数据抓取需要1秒，总共需要 total_pages 秒，平均分配到每次请求中
-            # 确保至少等待1秒，避免过于频繁的请求
-            if page < total_pages:
-                time.sleep(max(1, (estimated_minutes * 60) / total_pages))
+            # 如果不是最后一页，等待1分钟
+            if offset < total_count:
+                print("等待 60 秒后继续...")
+                time.sleep(60)
 
         except requests.RequestException as e:
             print(f"第 {page} 页请求失败: {e}")
