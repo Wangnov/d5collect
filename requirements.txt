@@ -3,3 +3,4 @@ pypinyin
 gunicorn
 requests
 beautifulsoup4
+celery
