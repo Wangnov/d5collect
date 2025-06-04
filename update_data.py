@@ -163,7 +163,7 @@ def collect_all_costume_data(total_count):
     """
     采集全部时装数据
     """
-    print(f"\n=== 开始全量数据采集 ===")
+    print("\n=== 开始全量数据采集 ===")
     print(f"目标数据量: {total_count}")
 
     # 计算预估时间
@@ -205,7 +205,7 @@ def collect_all_costume_data(total_count):
 
             print(f"本页获取 {len(page_data)} 条数据，累计 {len(all_data)} 条")
             print(f"进度: {progress:.1f}% ({len(all_data)}/{total_count})")
-            print(f"已用时: {elapsed_time/2:.1f} 分钟")
+            print(f"已用时: {elapsed_time/60:.1f} 分钟")
 
             # 更新分页参数
             offset += limit
@@ -213,8 +213,8 @@ def collect_all_costume_data(total_count):
 
             # 如果不是最后一页，等待1分钟
             if offset < total_count:
-                print("等待 2 秒后继续...")
-                time.sleep(2)
+                print("等待 60 秒后继续...")
+                time.sleep(60)
 
         except requests.RequestException as e:
             print(f"第 {page} 页请求失败: {e}")
@@ -229,10 +229,10 @@ def collect_all_costume_data(total_count):
     # 计算总用时
     total_time = time.time() - start_time
 
-    print(f"\n=== 数据采集完成 ===")
+    print("\n=== 数据采集完成 ===")
     print(f"总共采集到 {len(all_data)} 条数据")
-    print(f"总用时: {total_time/2:.1f} 分钟")
-    print(f"采集效率: {len(all_data)/(total_time/2):.1f} 条/分钟")
+    print(f"总用时: {total_time/60:.1f} 分钟")
+    print(f"采集效率: {len(all_data)/(total_time/60):.1f} 条/分钟")
 
     return all_data
 
@@ -328,7 +328,7 @@ def main():
 
     # 如果需要更新，执行全量数据采集
     if need_update:
-        print(f"\n开始执行数据更新...")
+        print("\n开始执行数据更新...")
 
         # 询问用户是否确认更新
         user_input = input(f"确认要采集全部 {latest_count} 条数据吗？这可能需要较长时间 (y/n): ")
@@ -339,8 +339,8 @@ def main():
             if updated_data:
                 # 保存到新文件
                 if save_updated_data(updated_data):
-                    print(f"\n=== 更新完成 ===")
-                    print(f"新数据已保存到 costumes_data_updated.json")
+                    print("\n=== 更新完成 ===")
+                    print("新数据已保存到 costumes_data_updated.json")
                     print(f"采集到 {len(updated_data)} 条数据")
 
                     # 数据质量检查
@@ -359,7 +359,7 @@ def main():
         print("\n执行小量数据测试...")
         api_results = use_api_request()
 
-        print(f"\n=== 测试结果 ===")
+        print("\n=== 测试结果 ===")
         print(f"最新时装总数: {latest_count}")
         print(f"测试提取到 {len(api_results)} 条数据")
 

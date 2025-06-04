@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -20,37 +21,42 @@
         }
     </script>
 </head>
+
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <div class="text-center mb-10">
             <h1 class="text-4xl font-extrabold text-gray-900 mb-2">谐音字皮肤查询</h1>
             <p class="text-gray-500">输入一句话，快速查找到谐音字开头的皮肤</p>
         </div>
-        
+
         <form method="POST" class="mb-12 bg-white rounded-xl shadow-sm p-6">
             <div class="flex flex-col sm:flex-row gap-4">
-                <input type="text" name="input_text" placeholder="输入你想查找的话..." 
-                       class="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-700">
-                <button type="submit" 
-                        class="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium">
+                <input type="text" name="input_text" placeholder="输入你想查找的话..."
+                    class="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-700">
+                <button type="submit"
+                    class="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium">
                     查找
                 </button>
             </div>
         </form>
-        
+
         {% if input_text %}
         <div class="space-y-8 bg-white rounded-xl shadow-sm p-6">
             <h2 class="text-2xl font-bold text-gray-900">查询结果</h2>
-            
-            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+
+            <div class="flex flex-row gap-1 mb-6">
                 <!-- 品质筛选 - 多选下拉 -->
-                <div class="relative flex-1">
-                    <div class="flex flex-wrap items-center gap-2 p-2 border border-gray-200 rounded-lg bg-white min-h-[50px]" id="qualityTags">
-                        <input type="text" id="qualitySearch" placeholder="筛选品质..." class="flex-1 min-w-[120px] outline-none text-gray-700 py-1">
+                <div class="relative w-1/2">
+                    <div class="flex flex-wrap items-center gap-2 p-2 border border-gray-200 rounded-lg bg-white min-h-[50px]"
+                        id="qualityTags">
+                        <input type="text" id="qualitySearch" placeholder="筛选品质..."
+                            class="flex-1 min-w-[60px] outline-none text-gray-700 py-1">
                     </div>
-                    <div id="qualityDropdown" class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
+                    <div id="qualityDropdown"
+                        class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
                         <div class="p-2">
-                            <div class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer" data-value="">
+                            <div class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer"
+                                data-value="">
                                 <input type="checkbox" id="qualityAll" class="h-4 w-4 text-primary-500 rounded">
                                 <label for="qualityAll" class="cursor-pointer flex-1">所有品质</label>
                             </div>
@@ -58,15 +64,19 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- 角色筛选 - 多选下拉 -->
-                <div class="relative flex-1">
-                    <div class="flex flex-wrap items-center gap-2 p-2 border border-gray-200 rounded-lg bg-white min-h-[50px]" id="characterTags">
-                        <input type="text" id="characterSearch" placeholder="筛选角色..." class="flex-1 min-w-[120px] outline-none text-gray-700 py-1">
+                <div class="relative w-1/2">
+                    <div class="flex flex-wrap items-center gap-2 p-2 border border-gray-200 rounded-lg bg-white min-h-[50px]"
+                        id="characterTags">
+                        <input type="text" id="characterSearch" placeholder="筛选角色..."
+                            class="flex-1 min-w-[50px] outline-none text-gray-700 py-1">
                     </div>
-                    <div id="characterDropdown" class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
+                    <div id="characterDropdown"
+                        class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
                         <div class="p-2">
-                            <div class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer" data-value="">
+                            <div class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer"
+                                data-value="">
                                 <input type="checkbox" id="characterAll" class="h-4 w-4 text-primary-500 rounded">
                                 <label for="characterAll" class="cursor-pointer flex-1">所有角色</label>
                             </div>
@@ -75,21 +85,24 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="flex overflow-x-auto pb-4 gap-4 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" style="padding-left:15px;padding-right:15px">
+
+            <div
+                class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto pb-4 px-4">
                 {% for char, costumes in result %}
                 <div class="flex flex-col items-center">
                     <div class="text-xl font-semibold text-gray-800 mb-4">{{ char }}</div>
-                    
+
                     <div class="w-full space-y-4">
                         {% for costume in costumes %}
-                        <div class="{% if costume.exact_match %}bg-white shadow-[0_0_10px_rgba(250,214,165,0.6),0_0_15px_rgba(218,165,105,0.4)]{% else %}bg-white{% endif %} p-4 rounded-lg hover:shadow-md transition-all duration-300 min-w-[100px]" data-id="{{ costume.name }}">
+                        <div class="{% if costume.exact_match %}bg-white shadow-[0_0_10px_rgba(250,214,165,0.6),0_0_15px_rgba(218,165,105,0.4)]{% else %}bg-white{% endif %} p-4 rounded-lg hover:shadow-md transition-all duration-300 min-w-[100px]"
+                            data-id="{{ costume.name }}">
                             <a href="{{ costume.wiki_url }}" target="_blank" class="block">
-                                <img src="{{ costume.image_url }}" alt="{{ costume.name }}" 
-                                     class="w-full h-auto rounded-lg object-contain aspect-square hover:scale-105 transition-transform duration-300">
+                                <img src="{{ costume.image_url }}" alt="{{ costume.name }}"
+                                    class="w-full h-auto rounded-lg object-contain aspect-square hover:scale-105 transition-transform duration-300">
                             </a>
                             <div class="mt-3 text-center">
-                                <p class="text-sm font-medium text-gray-700 whitespace-nowrap">{{ costume.character }}</p>
+                                <p class="text-sm font-medium text-gray-700 whitespace-nowrap">{{ costume.character }}
+                                </p>
                                 <p class="text-xs text-gray-500 mt-1">{{ costume.quality_name }}</p>
                             </div>
                         </div>
@@ -101,23 +114,23 @@
         </div>
         {% endif %}
     </div>
-    
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // 提取所有品质和角色选项
             const costumes = [];
-            
+
             // 等待DOM完全加载后再获取所有卡片元素
             setTimeout(() => {
                 // 获取所有卡片元素
                 const cardElements = document.querySelectorAll('div[data-id]');
-                
+
                 // 遍历所有卡片元素并添加到costumes数组
                 cardElements.forEach(element => {
                     const id = element.dataset.id;
                     const character = element.querySelector('.text-sm.font-medium').textContent;
                     const quality_name = element.querySelector('.text-xs.text-gray-500').textContent;
-                    
+
                     costumes.push({
                         id: id,
                         quality_name: quality_name,
@@ -125,234 +138,234 @@
                         element: element
                     });
                 });
-                
+
                 // 初始化筛选下拉菜单
                 initializeFilters();
             }, 100);
-            
+
             // 初始化筛选状态
             const filters = {
                 quality: [],
                 character: []
             };
-            
+
             // 获取DOM元素
             const qualityTags = document.getElementById('qualityTags');
             const qualityDropdown = document.getElementById('qualityDropdown');
             const qualitySearch = document.getElementById('qualitySearch');
             const qualityAll = document.getElementById('qualityAll');
-            
+
             const characterTags = document.getElementById('characterTags');
             const characterDropdown = document.getElementById('characterDropdown');
             const characterSearch = document.getElementById('characterSearch');
             const characterAll = document.getElementById('characterAll');
-            
+
             // 初始化筛选器函数
             function initializeFilters() {
-            
-            // 填充品质下拉菜单
-            const qualitySet = new Set();
-            costumes.forEach(c => qualitySet.add(c.quality_name));
-            const qualityOptions = Array.from(qualitySet);
-            
-            qualityOptions.forEach(quality => {
-                const optionId = `quality-${quality.replace(/\s+/g, '-')}`;
-                const optionDiv = document.createElement('div');
-                optionDiv.className = 'flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer';
-                optionDiv.dataset.value = quality;
-                optionDiv.innerHTML = `
+
+                // 填充品质下拉菜单
+                const qualitySet = new Set();
+                costumes.forEach(c => qualitySet.add(c.quality_name));
+                const qualityOptions = Array.from(qualitySet);
+
+                qualityOptions.forEach(quality => {
+                    const optionId = `quality-${quality.replace(/\s+/g, '-')}`;
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer';
+                    optionDiv.dataset.value = quality;
+                    optionDiv.innerHTML = `
                     <input type="checkbox" id="${optionId}" class="h-4 w-4 text-primary-500 rounded">
                     <label for="${optionId}" class="cursor-pointer flex-1">${quality}</label>
                 `;
-                qualityDropdown.querySelector('div').appendChild(optionDiv);
-                
-                // 添加点击事件
-                optionDiv.addEventListener('click', function(e) {
-                    const checkbox = this.querySelector('input[type="checkbox"]');
-                    checkbox.checked = !checkbox.checked;
-                    
-                    if (checkbox.checked) {
-                        addFilter('quality', quality);
-                    } else {
-                        removeFilter('quality', quality);
-                    }
-                    
-                    e.stopPropagation();
+                    qualityDropdown.querySelector('div').appendChild(optionDiv);
+
+                    // 添加点击事件
+                    optionDiv.addEventListener('click', function (e) {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+
+                        if (checkbox.checked) {
+                            addFilter('quality', quality);
+                        } else {
+                            removeFilter('quality', quality);
+                        }
+
+                        e.stopPropagation();
+                    });
                 });
-            });
-            
-            // 填充角色下拉菜单
-            const characterSet = new Set();
-            costumes.forEach(c => characterSet.add(c.character));
-            const characterOptions = Array.from(characterSet);
-            
-            characterOptions.forEach(character => {
-                const optionId = `character-${character.replace(/\s+/g, '-')}`;
-                const optionDiv = document.createElement('div');
-                optionDiv.className = 'flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer';
-                optionDiv.dataset.value = character;
-                optionDiv.innerHTML = `
+
+                // 填充角色下拉菜单
+                const characterSet = new Set();
+                costumes.forEach(c => characterSet.add(c.character));
+                const characterOptions = Array.from(characterSet);
+
+                characterOptions.forEach(character => {
+                    const optionId = `character-${character.replace(/\s+/g, '-')}`;
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer';
+                    optionDiv.dataset.value = character;
+                    optionDiv.innerHTML = `
                     <input type="checkbox" id="${optionId}" class="h-4 w-4 text-primary-500 rounded">
                     <label for="${optionId}" class="cursor-pointer flex-1">${character}</label>
                 `;
-                characterDropdown.querySelector('div').appendChild(optionDiv);
-                
-                // 添加点击事件
-                optionDiv.addEventListener('click', function(e) {
-                    const checkbox = this.querySelector('input[type="checkbox"]');
-                    checkbox.checked = !checkbox.checked;
-                    
-                    if (checkbox.checked) {
-                        addFilter('character', character);
+                    characterDropdown.querySelector('div').appendChild(optionDiv);
+
+                    // 添加点击事件
+                    optionDiv.addEventListener('click', function (e) {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+
+                        if (checkbox.checked) {
+                            addFilter('character', character);
+                        } else {
+                            removeFilter('character', character);
+                        }
+
+                        e.stopPropagation();
+                    });
+                });
+
+                // 全选/取消全选品质
+                qualityAll.parentElement.addEventListener('click', function (e) {
+                    const isChecked = !qualityAll.checked;
+                    qualityAll.checked = isChecked;
+
+                    const checkboxes = qualityDropdown.querySelectorAll('input[type="checkbox"]:not(#qualityAll)');
+                    checkboxes.forEach(cb => {
+                        cb.checked = isChecked;
+                    });
+
+                    if (isChecked) {
+                        // 全选
+                        filters.quality = [...qualityOptions];
                     } else {
-                        removeFilter('character', character);
+                        // 取消全选
+                        filters.quality = [];
                     }
-                    
+
+                    updateTags('quality');
+                    applyFilters();
                     e.stopPropagation();
                 });
-            });
-            
-            // 全选/取消全选品质
-            qualityAll.parentElement.addEventListener('click', function(e) {
-                const isChecked = !qualityAll.checked;
-                qualityAll.checked = isChecked;
-                
-                const checkboxes = qualityDropdown.querySelectorAll('input[type="checkbox"]:not(#qualityAll)');
-                checkboxes.forEach(cb => {
-                    cb.checked = isChecked;
-                });
-                
-                if (isChecked) {
-                    // 全选
-                    filters.quality = [...qualityOptions];
-                } else {
-                    // 取消全选
-                    filters.quality = [];
-                }
-                
-                updateTags('quality');
-                applyFilters();
-                e.stopPropagation();
-            });
-            
-            // 全选/取消全选角色
-            characterAll.parentElement.addEventListener('click', function(e) {
-                const isChecked = !characterAll.checked;
-                characterAll.checked = isChecked;
-                
-                const checkboxes = characterDropdown.querySelectorAll('input[type="checkbox"]:not(#characterAll)');
-                checkboxes.forEach(cb => {
-                    cb.checked = isChecked;
-                });
-                
-                if (isChecked) {
-                    // 全选
-                    filters.character = [...characterOptions];
-                } else {
-                    // 取消全选
-                    filters.character = [];
-                }
-                
-                updateTags('character');
-                applyFilters();
-                e.stopPropagation();
-            });
-            
-            // 点击输入框显示下拉菜单
-            qualitySearch.addEventListener('click', function(e) {
-                qualityDropdown.classList.remove('hidden');
-                characterDropdown.classList.add('hidden');
-                e.stopPropagation();
-            });
-            
-            qualityTags.addEventListener('click', function(e) {
-                qualityDropdown.classList.remove('hidden');
-                characterDropdown.classList.add('hidden');
-                qualitySearch.focus();
-                e.stopPropagation();
-            });
-            
-            characterSearch.addEventListener('click', function(e) {
-                characterDropdown.classList.remove('hidden');
-                qualityDropdown.classList.add('hidden');
-                e.stopPropagation();
-            });
-            
-            characterTags.addEventListener('click', function(e) {
-                characterDropdown.classList.remove('hidden');
-                qualityDropdown.classList.add('hidden');
-                characterSearch.focus();
-                e.stopPropagation();
-            });
-            
-            // 点击页面其他地方关闭下拉菜单
-            document.addEventListener('click', function() {
-                qualityDropdown.classList.add('hidden');
-                characterDropdown.classList.add('hidden');
-            });
-            
-            // 搜索功能
-            qualitySearch.addEventListener('input', function() {
-                const searchText = this.value.toLowerCase();
-                const options = qualityDropdown.querySelectorAll('div[data-value]:not([data-value=""])');
-                
-                options.forEach(option => {
-                    const value = option.dataset.value.toLowerCase();
-                    if (value.includes(searchText)) {
-                        option.style.display = 'flex';
+
+                // 全选/取消全选角色
+                characterAll.parentElement.addEventListener('click', function (e) {
+                    const isChecked = !characterAll.checked;
+                    characterAll.checked = isChecked;
+
+                    const checkboxes = characterDropdown.querySelectorAll('input[type="checkbox"]:not(#characterAll)');
+                    checkboxes.forEach(cb => {
+                        cb.checked = isChecked;
+                    });
+
+                    if (isChecked) {
+                        // 全选
+                        filters.character = [...characterOptions];
                     } else {
-                        option.style.display = 'none';
+                        // 取消全选
+                        filters.character = [];
                     }
+
+                    updateTags('character');
+                    applyFilters();
+                    e.stopPropagation();
                 });
-            });
-            
-            characterSearch.addEventListener('input', function() {
-                const searchText = this.value.toLowerCase();
-                const options = characterDropdown.querySelectorAll('div[data-value]:not([data-value=""])');
-                
-                options.forEach(option => {
-                    const value = option.dataset.value.toLowerCase();
-                    if (value.includes(searchText)) {
-                        option.style.display = 'flex';
-                    } else {
-                        option.style.display = 'none';
+
+                // 点击输入框显示下拉菜单
+                qualitySearch.addEventListener('click', function (e) {
+                    qualityDropdown.classList.remove('hidden');
+                    characterDropdown.classList.add('hidden');
+                    e.stopPropagation();
+                });
+
+                qualityTags.addEventListener('click', function (e) {
+                    qualityDropdown.classList.remove('hidden');
+                    characterDropdown.classList.add('hidden');
+                    qualitySearch.focus();
+                    e.stopPropagation();
+                });
+
+                characterSearch.addEventListener('click', function (e) {
+                    characterDropdown.classList.remove('hidden');
+                    qualityDropdown.classList.add('hidden');
+                    e.stopPropagation();
+                });
+
+                characterTags.addEventListener('click', function (e) {
+                    characterDropdown.classList.remove('hidden');
+                    qualityDropdown.classList.add('hidden');
+                    characterSearch.focus();
+                    e.stopPropagation();
+                });
+
+                // 点击页面其他地方关闭下拉菜单
+                document.addEventListener('click', function () {
+                    qualityDropdown.classList.add('hidden');
+                    characterDropdown.classList.add('hidden');
+                });
+
+                // 搜索功能
+                qualitySearch.addEventListener('input', function () {
+                    const searchText = this.value.toLowerCase();
+                    const options = qualityDropdown.querySelectorAll('div[data-value]:not([data-value=""])');
+
+                    options.forEach(option => {
+                        const value = option.dataset.value.toLowerCase();
+                        if (value.includes(searchText)) {
+                            option.style.display = 'flex';
+                        } else {
+                            option.style.display = 'none';
+                        }
+                    });
+                });
+
+                characterSearch.addEventListener('input', function () {
+                    const searchText = this.value.toLowerCase();
+                    const options = characterDropdown.querySelectorAll('div[data-value]:not([data-value=""])');
+
+                    options.forEach(option => {
+                        const value = option.dataset.value.toLowerCase();
+                        if (value.includes(searchText)) {
+                            option.style.display = 'flex';
+                        } else {
+                            option.style.display = 'none';
+                        }
+                    });
+                });
+
+                // 添加筛选条件
+                function addFilter(type, value) {
+                    if (!filters[type].includes(value)) {
+                        filters[type].push(value);
+                        updateTags(type);
+                        applyFilters();
                     }
-                });
-            });
-            
-            // 添加筛选条件
-            function addFilter(type, value) {
-                if (!filters[type].includes(value)) {
-                    filters[type].push(value);
-                    updateTags(type);
-                    applyFilters();
                 }
-            }
-            
-            // 移除筛选条件
-            function removeFilter(type, value) {
-                const index = filters[type].indexOf(value);
-                if (index !== -1) {
-                    filters[type].splice(index, 1);
-                    updateTags(type);
-                    applyFilters();
+
+                // 移除筛选条件
+                function removeFilter(type, value) {
+                    const index = filters[type].indexOf(value);
+                    if (index !== -1) {
+                        filters[type].splice(index, 1);
+                        updateTags(type);
+                        applyFilters();
+                    }
                 }
-            }
-            
-            // 更新标签显示
-            function updateTags(type) {
-                const container = type === 'quality' ? qualityTags : characterTags;
-                const search = type === 'quality' ? qualitySearch : characterSearch;
-                
-                // 移除现有标签
-                const existingTags = container.querySelectorAll('.filter-tag');
-                existingTags.forEach(tag => tag.remove());
-                
-                // 添加新标签
-                filters[type].forEach(value => {
-                    const tag = document.createElement('div');
-                    tag.className = 'filter-tag flex items-center bg-primary-500 text-white text-sm rounded-full px-3 py-1';
-                    tag.innerHTML = `
+
+                // 更新标签显示
+                function updateTags(type) {
+                    const container = type === 'quality' ? qualityTags : characterTags;
+                    const search = type === 'quality' ? qualitySearch : characterSearch;
+
+                    // 移除现有标签
+                    const existingTags = container.querySelectorAll('.filter-tag');
+                    existingTags.forEach(tag => tag.remove());
+
+                    // 添加新标签
+                    filters[type].forEach(value => {
+                        const tag = document.createElement('div');
+                        tag.className = 'filter-tag flex items-center bg-primary-500 text-white text-sm rounded-full px-3 py-1';
+                        tag.innerHTML = `
                         <span class="mr-1">${value}</span>
                         <button type="button" class="text-white hover:text-gray-200 focus:outline-none" data-value="${value}">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -360,42 +373,43 @@
                             </svg>
                         </button>
                     `;
-                    
-                    // 添加删除事件
-                    tag.querySelector('button').addEventListener('click', function(e) {
-                        removeFilter(type, this.dataset.value);
-                        e.stopPropagation();
+
+                        // 添加删除事件
+                        tag.querySelector('button').addEventListener('click', function (e) {
+                            removeFilter(type, this.dataset.value);
+                            e.stopPropagation();
+                        });
+
+                        container.insertBefore(tag, search);
                     });
-                    
-                    container.insertBefore(tag, search);
-                });
-                
-                // 更新全选复选框状态
-                const allCheckbox = type === 'quality' ? qualityAll : characterAll;
-                const options = type === 'quality' ? qualityOptions : characterOptions;
-                
-                if (filters[type].length === options.length) {
-                    allCheckbox.checked = true;
-                } else {
-                    allCheckbox.checked = false;
-                }
-            }
-            
-            // 应用筛选
-            function applyFilters() {
-                costumes.forEach(costume => {
-                    const matchesQuality = filters.quality.length === 0 || filters.quality.includes(costume.quality_name);
-                    const matchesCharacter = filters.character.length === 0 || filters.character.includes(costume.character);
-                    
-                    if (matchesQuality && matchesCharacter) {
-                        costume.element.style.display = 'block';
+
+                    // 更新全选复选框状态
+                    const allCheckbox = type === 'quality' ? qualityAll : characterAll;
+                    const options = type === 'quality' ? qualityOptions : characterOptions;
+
+                    if (filters[type].length === options.length) {
+                        allCheckbox.checked = true;
                     } else {
-                        costume.element.style.display = 'none';
+                        allCheckbox.checked = false;
                     }
-                });
-            }
+                }
+
+                // 应用筛选
+                function applyFilters() {
+                    costumes.forEach(costume => {
+                        const matchesQuality = filters.quality.length === 0 || filters.quality.includes(costume.quality_name);
+                        const matchesCharacter = filters.character.length === 0 || filters.character.includes(costume.character);
+
+                        if (matchesQuality && matchesCharacter) {
+                            costume.element.style.display = 'block';
+                        } else {
+                            costume.element.style.display = 'none';
+                        }
+                    });
+                }
             } // 关闭initializeFilters函数
         });
     </script>
 </body>
+
 </html>
