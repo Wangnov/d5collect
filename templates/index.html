@@ -28,7 +28,7 @@
     </script>
 </head>
 
-<body class="bg-gray-50 min-h-screen font-sans antialiased">
+<body class="bg-gray-50 min-h-screen font-sans antialiased flex flex-col">
     <!-- 悬浮按钮组 -->
     <div class="fixed bottom-4 right-4 z-50">
         <div id="floatingButtonGroup" class="flex flex-col items-end space-y-2">
@@ -202,7 +202,7 @@
             </div>
         </div>
     </div>
-
+    <main>
     <div class="container mx-auto px-4 py-8 max-w-5xl">
         <div class="text-center mb-10">
             <h1 class="text-4xl font-extrabold text-gray-900 mb-2">谐音字皮肤查询</h1>
@@ -295,7 +295,7 @@
         </div>
         {% endif %}
     </div>
-
+    </main>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // 提取所有品质和角色选项
@@ -676,8 +676,7 @@
     </style>
 
     <!-- Footer -->
-    <footer class="bg-gray-100 border-t border-gray-200 py-6 mt-12" ,
-        style="position: absolute;bottom: 0px;width: 100%;">
+    <footer class="bg-gray-100 border-t border-gray-200 py-6 mt-auto">
         <div class="container mx-auto px-4 text-center">
             <div class="flex flex-row items-center justify-center gap-2 text-sm text-gray-600">
                 <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer"
