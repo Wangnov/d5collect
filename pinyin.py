@@ -3,7 +3,7 @@ from pypinyin import pinyin, Style
 
 # 处理拼音
 """将所有汉字转换为拼音"""
-with open('costumes_data.json', 'r') as f:
+with open('costumes_data.json', 'r', encoding='utf-8') as f:
     d = json.load(f)
 character_list = []
 for i in d:

@@ -3,6 +3,8 @@
 import os
 import json
 import logging
+import datetime
+from logging.handlers import TimedRotatingFileHandler
 from pinyin import get_matching_costumes
 from flask import Flask, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -14,12 +16,12 @@ import database
 LOG_DIR = os.path.join('log', 'app')
 os.makedirs(LOG_DIR, exist_ok=True)
 
-log_file_path = os.path.join(LOG_DIR, 'app.log')
+log_file_path = os.path.join(LOG_DIR, f'{datetime.date.today()}.log')
 logger = logging.getLogger('my_app')
 logger.setLevel(logging.INFO)
 
 # when='D' 表示按天分割, backupCount 保留旧文件数量
-handler = logging.handlers.TimedRotatingFileHandler(
+handler = TimedRotatingFileHandler(
     log_file_path,
     when='D',
     interval=1,
