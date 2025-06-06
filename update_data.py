@@ -3,6 +3,12 @@ import requests
 import re
 import time
 from bs4 import BeautifulSoup
+from urllib.parse import unquote
+
+# 配置变量
+PAGE_SIZE = 1000  # 每页采集的数据量
+CRAWL_DELAY = 3   # 采集间隔时间（秒）
+
 
 def get_latest_costume_count():
     """
@@ -38,82 +44,87 @@ def get_latest_costume_count():
         print(f"解析时装总数失败: {e}")
         return None
 
+
 def extract_costume_data_from_response(response_data):
     """
-    从API响应中提取符合costumes_data.json格式的数据
+    从API响应中提取符合costumes_data.json格式的数据（已修复错位问题）
     """
     results = []
 
     # 获取HTML内容
     html_content = response_data['parse']['text']['*']
 
-    # 获取图片文件名列表
-    images = response_data['parse']['images']
-
-    # 解析HTML以提取image_url和wiki_url
+    # 解析HTML
     soup = BeautifulSoup(html_content, 'html.parser')
 
     # 查找所有的时装卡片
     clothes_boxes = soup.find_all('div', class_='clothes-box')
 
-    for i, box in enumerate(clothes_boxes):
-        if i >= len(images):
-            break
-
+    for box in clothes_boxes:
         # 提取wiki_url
         link_element = box.find('a')
-        if link_element and 'href' in link_element.attrs:
-            wiki_url = 'https://wiki.biligame.com' + link_element['href']
-        else:
-            wiki_url = ""
+        wiki_url = 'https://wiki.biligame.com' + \
+            link_element['href'] if link_element and 'href' in link_element.attrs else ""
 
-        # 提取image_url (使用120px版本)
+        # 提取image_url (优先使用120px版本)
         img_element = box.find('img')
-        if img_element and 'srcset' in img_element.attrs:
-            # 从srcset中提取120px版本的URL
-            srcset = img_element['srcset']
-            # 查找120px版本
-            match = re.search(r'(https://[^\s]+120px-[^\s]+)\s+2x', srcset)
-            if match:
-                image_url = match.group(1)
+        image_url = ""
+        if img_element:
+            if 'srcset' in img_element.attrs:
+                srcset = img_element['srcset']
+                match_srcset = re.search(
+                    r'(https://[^\s]+120px-[^\s]+)\s+2x', srcset)
+                if match_srcset:
+                    image_url = match_srcset.group(1)
+                else:
+                    image_url = img_element.get('src', '')
             else:
                 image_url = img_element.get('src', '')
-        else:
-            image_url = ""
 
-        # 从图片文件名中提取信息
-        image_filename = images[i]
+        # 如果成功获取image_url，则从中提取文件名并解析
+        if image_url:
+            try:
+                # 从URL的末尾提取文件名部分 (e.g., 120px-....png)
+                filename_encoded = image_url.split('/')[-1]
+                # 去除 "120px-" 前缀
+                if filename_encoded.startswith('120px-'):
+                    filename_encoded = filename_encoded[len('120px-'):]
 
-        # 正则提取角色、品质和名称
-        # 格式通常是：角色+品质+时装_名称.png
-        pattern = r'^(.+?)(罕见品质|独特品质|奇珍品质|稀世品质|虚妄杰作品质)时装_(.+)\.png$'
-        match = re.match(pattern, image_filename)
+                # URL解码，将 %E9%AA%91%E5%A3%AB... 转换回 "骑士..."
+                image_filename = unquote(filename_encoded)
 
-        if match:
-            character = match.group(1)
-            quality_name = match.group(2)
-            name = match.group(3)
+                # 使用正则表达式提取角色、品质和名称 (逻辑保持不变)
+                pattern = r'^(.+?)(罕见品质|独特品质|奇珍品质|稀世品质|虚妄杰作品质)时装_(.+)\.png$'
+                match = re.match(pattern, image_filename)
 
-            # 映射品质名称到数字
-            quality_map = {
-                '罕见品质': 0,
-                '独特品质': 1,
-                '奇珍品质': 2,
-                '稀世品质': 3,
-                '虚妄杰作品质': 4
-            }
-            quality = quality_map.get(quality_name, 0)
+                if match:
+                    character = match.group(1)
+                    quality_name = match.group(2)
+                    name = match.group(3)
 
-            costume_data = {
-                "character": character,
-                "quality": quality,
-                "quality_name": quality_name,
-                "name": name,
-                "image_url": image_url,
-                "wiki_url": wiki_url
-            }
+                    # 映射品质名称到数字
+                    quality_map = {
+                        '罕见品质': 0,
+                        '独特品质': 1,
+                        '奇珍品质': 2,
+                        '稀世品质': 3,
+                        '虚妄杰作品质': 4
+                    }
+                    quality = quality_map.get(quality_name, 0)
 
-            results.append(costume_data)
+                    costume_data = {
+                        "character": character,
+                        "quality": quality,
+                        "quality_name": quality_name,
+                        "name": name,
+                        "image_url": image_url,
+                        "wiki_url": wiki_url
+                    }
+                    results.append(costume_data)
+
+            except Exception as e:
+                # 如果解析某个卡片时出错，打印错误并继续处理下一个
+                print(f"处理卡片时发生错误: {e}, URL: {image_url}")
 
     return results
 
@@ -148,7 +159,8 @@ def use_api_request():
         print(f"JSON解析失败: {e}")
         return []
 
-def build_api_url(limit=100, offset=0):
+
+def build_api_url(limit=PAGE_SIZE, offset=0):
     """
     构建API请求URL，支持分页参数
     参考正确的API结构
@@ -159,6 +171,7 @@ def build_api_url(limit=100, offset=0):
 
     return url
 
+
 def collect_all_costume_data(total_count):
     """
     采集全部时装数据
@@ -167,10 +180,10 @@ def collect_all_costume_data(total_count):
     print(f"目标数据量: {total_count}")
 
     # 计算预估时间
-    limit = 100
+    limit = PAGE_SIZE
     total_pages = (total_count + limit - 1) // limit  # 向上取整
-    estimated_minutes = total_pages  # 每页1分钟间隔
-    print(f"预计需要 {total_pages} 页，约 {estimated_minutes} 分钟")
+    estimated_minutes = total_pages * (CRAWL_DELAY)  # 根据实际延迟计算时间
+    print(f"预计需要 {total_pages} 页，约 {estimated_minutes:.1f} 秒")
 
     all_data = []
     offset = 0
@@ -200,21 +213,21 @@ def collect_all_costume_data(total_count):
             all_data.extend(page_data)
 
             # 计算进度
-            progress = min(len(all_data) / total_count * 100, 100)
+            progress = min(len(all_data) / total_count * 1000, 1000)
             elapsed_time = time.time() - start_time
 
             print(f"本页获取 {len(page_data)} 条数据，累计 {len(all_data)} 条")
             print(f"进度: {progress:.1f}% ({len(all_data)}/{total_count})")
-            print(f"已用时: {elapsed_time/60:.1f} 分钟")
+            print(f"已用时: {elapsed_time:.1f} 秒")
 
             # 更新分页参数
             offset += limit
             page += 1
 
-            # 如果不是最后一页，等待1分钟
+            # 如果不是最后一页，等待指定时间
             if offset < total_count:
-                print("等待 60 秒后继续...")
-                time.sleep(60)
+                print(f"等待 {CRAWL_DELAY} 秒后继续...")
+                time.sleep(CRAWL_DELAY)
 
         except requests.RequestException as e:
             print(f"第 {page} 页请求失败: {e}")
@@ -231,10 +244,11 @@ def collect_all_costume_data(total_count):
 
     print("\n=== 数据采集完成 ===")
     print(f"总共采集到 {len(all_data)} 条数据")
-    print(f"总用时: {total_time/60:.1f} 分钟")
-    print(f"采集效率: {len(all_data)/(total_time/60):.1f} 条/分钟")
+    print(f"总用时: {total_time:.1f} 秒")
+    print(f"采集效率: {len(all_data)/(total_time):.1f} 条/秒")
 
     return all_data
+
 
 def save_updated_data(data, filename="costumes_data_updated.json"):
     """
@@ -249,12 +263,13 @@ def save_updated_data(data, filename="costumes_data_updated.json"):
         print(f"保存数据失败: {e}")
         return False
 
+
 def test_api_url():
     """
     测试API URL是否正确工作
     """
     print("=== 测试API URL ===")
-    test_url = build_api_url(limit=10, offset=0)
+    test_url = build_api_url(limit=5, offset=0)
     print(f"测试URL: {test_url}")
 
     try:
@@ -283,6 +298,7 @@ def test_api_url():
         print(f"❌ API测试失败: {e}")
         return False
 
+
 def main():
     # 首先测试API URL是否正确
     if not test_api_url():
@@ -304,17 +320,23 @@ def main():
             existing_data = json.load(f)
 
         print(f"\n现有数据条数: {len(existing_data)}")
-        print("现有数据示例:")
-        print(json.dumps(existing_data[0], ensure_ascii=False, indent=2))
+        if len(existing_data) == 0:
+            print('现有数据为0')
+        else:
+            print("现有数据示例:")
+            print(json.dumps(existing_data[0], ensure_ascii=False, indent=2))
 
         # 比较数量差异
         need_update = False
-        if latest_count > len(existing_data):
+        # 因为锁芯这个皮肤的存在，没有皮肤文件，所以本地的图片总是会少一个。计划在以后添加占位图来解决
+        if latest_count > len(existing_data) + 1:
             print(f"\n发现新增时装: {latest_count - len(existing_data)} 件")
             print("需要更新数据...")
             need_update = True
         elif latest_count == len(existing_data):
             print("\n数据已是最新，无需更新")
+        elif latest_count == len(existing_data) + 1:
+            print("\n除去锁芯外，数据已是最新，无需更新")
         else:
             print(f"\n警告: 本地数据({len(existing_data)})多于远程数据({latest_count})")
             print("建议重新采集数据...")
@@ -331,7 +353,8 @@ def main():
         print("\n开始执行数据更新...")
 
         # 询问用户是否确认更新
-        user_input = input(f"确认要采集全部 {latest_count} 条数据吗？这可能需要较长时间 (y/n): ")
+        # user_input = input(f"确认要采集全部 {latest_count} 条数据吗？这可能需要较长时间 (y/n): ")
+        user_input = 'y'
         if user_input.lower() in ['y', 'yes', '是', '确认']:
             # 执行全量数据采集
             updated_data = collect_all_costume_data(latest_count)
@@ -344,10 +367,11 @@ def main():
                     print(f"采集到 {len(updated_data)} 条数据")
 
                     # 数据质量检查
-                    if len(updated_data) >= latest_count * 0.9:  # 允许10%的误差
+                    if len(updated_data) == latest_count:  # 不允许误差
                         print("✅ 数据采集质量良好")
                     else:
-                        print(f"⚠️  数据采集可能不完整，预期 {latest_count} 条，实际 {len(updated_data)} 条")
+                        print(
+                            f"⚠️  数据采集可能不完整，预期 {latest_count} 条，实际 {len(updated_data)} 条")
                 else:
                     print("❌ 数据保存失败")
             else:
@@ -362,6 +386,7 @@ def main():
         print("\n=== 测试结果 ===")
         print(f"最新时装总数: {latest_count}")
         print(f"测试提取到 {len(api_results)} 条数据")
+
 
 if __name__ == "__main__":
     main()
