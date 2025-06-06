@@ -268,7 +268,7 @@ def test_api_url():
     """
     测试API URL是否正确工作
     """
-    print("=== 测试API URL ===")
+    print("\n=== 测试API URL ===")
     test_url = build_api_url(limit=5, offset=0)
     print(f"测试URL: {test_url}")
 
@@ -300,9 +300,12 @@ def test_api_url():
 
 
 def main():
+    import datetime
+    print("=== 第五人格BWIKI数据采集任务启动 ===")
+    print(f"\n=== 时间：{datetime.datetime.now()} ===")
     # 首先测试API URL是否正确
     if not test_api_url():
-        print("API测试失败，请检查URL结构")
+        print("\nAPI测试失败，请检查URL结构")
         return
 
     # 检测最新的时装总数
