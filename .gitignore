@@ -73,3 +73,6 @@ main_config.toml
 
 # 旧版本文件
 old/
+
+# 数据库文件
+*.db
