@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+数据库模型和操作
+"""
+
 import sqlite3
 import datetime
 import logging
@@ -10,7 +16,7 @@ from pypinyin import pinyin, Style
 # 这样数据库模块的日志会和主应用写在同一个文件里
 logger = logging.getLogger('my_app')
 
-DATABASE_FILE = 'database.db'
+DATABASE_FILE = 'data/database.db'
 
 # 简单的连接池实现
 class ConnectionPool:
@@ -304,7 +310,6 @@ def search_costumes_by_pinyin(query: str, limit: int = 20) -> List[Dict[str, Any
 
             # 5. 应用最终的数量限制并返回结果
             final_results = [item[1] for item in processed_results][:limit]
-            print(final_results)
             return final_results
             
     except sqlite3.Error as e:

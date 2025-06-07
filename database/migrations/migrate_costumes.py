@@ -5,8 +5,8 @@ from datetime import datetime
 from pypinyin import pinyin, Style
 
 # --- 配置 ---
-DATABASE_FILE = 'database.db'
-JSON_FILE = 'costumes_data.json'
+DATABASE_FILE = 'data/database.db'
+JSON_FILE = 'data/costumes_data.json'
 logger = logging.getLogger('migration_script')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

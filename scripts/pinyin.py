@@ -4,7 +4,7 @@ from collections import defaultdict
 
 # 处理拼音
 """将所有汉字转换为拼音，支持多音字"""
-with open('costumes_data.json', 'r', encoding='utf-8') as f:
+with open('data/costumes_data.json', 'r', encoding='utf-8') as f:
     d = json.load(f)
 
 # 收集所有汉字字符

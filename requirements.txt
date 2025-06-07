@@ -1,6 +1,24 @@
-Flask
-pypinyin
-gunicorn
-requests
-beautifulsoup4
-werkzeug
+# Flask Web Framework
+Flask>=2.0.0
+
+# Chinese Pinyin Processing
+pypinyin>=0.44.0
+
+# WSGI HTTP Server
+gunicorn>=20.1.0
+
+# HTTP Library for Data Scraping
+requests>=2.25.0
+
+# HTML/XML Parser for Web Scraping
+beautifulsoup4>=4.9.0
+
+# WSGI Utilities
+Werkzeug>=2.0.0,<3.0.0
+
+# Development Dependencies (Optional)
+# Uncomment for development environment
+# pytest>=6.0.0
+# pytest-flask>=1.2.0
+# black>=21.0.0
+# flake8>=3.9.0

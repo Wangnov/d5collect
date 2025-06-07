@@ -19,4 +19,4 @@ loglevel = 'info'
 daemon = False
 
 # 指定应用模块
-app_module = 'app:app'
+app_module = 'run:app'
