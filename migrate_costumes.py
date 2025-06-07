@@ -43,17 +43,28 @@ def generate_pinyin_index(name):
     
     return pinyin_index, first_char
 
-def migrate_data():
+def check_and_add_missing_columns():
     """
-    读取 JSON 文件，将皮肤数据同步到数据库的 'costumes' 表中。
-    此脚本可以重复运行以更新数据。
+    检查表结构并添加缺失的字段
     """
-    # 1. 连接数据库并创建新结构的表
+    required_columns = {
+        'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'character_name': 'TEXT NOT NULL',
+        'costume_name': 'TEXT NOT NULL', 
+        'quality': 'INTEGER NOT NULL',
+        'quality_name': 'TEXT',
+        'image_url': 'TEXT',
+        'wiki_url': 'TEXT',
+        'pinyin_index': 'TEXT',
+        'first_char': 'TEXT',
+        'updated_at': 'TIMESTAMP NOT NULL'
+    }
+    
     try:
         with sqlite3.connect(DATABASE_FILE) as conn:
             cursor = conn.cursor()
-            # 创建一个结构更丰富的表来存储所有皮肤信息
-            # 新增了 character_name, quality, quality_name, image_url, wiki_url 和 updated_at 字段
+            
+            # 首先创建表（如果不存在）
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS costumes (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,20 +77,72 @@ def migrate_data():
                     pinyin_index TEXT,
                     first_char TEXT,
                     updated_at TIMESTAMP NOT NULL,
-                    -- 创建一个联合唯一索引，确保同一个角色不会有同名皮肤
                     UNIQUE(character_name, costume_name)
                 )
             ''')
-            # 为常用搜索字段创建索引，可以极大提升查询速度
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_costume_name ON costumes (costume_name)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_character_name ON costumes (character_name)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_pinyin_index ON costumes (pinyin_index)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_first_char ON costumes (first_char)")
             
-            logger.info("'costumes' 表已更新至最新结构。")
+            # 检查现有字段
+            cursor.execute('PRAGMA table_info(costumes)')
+            existing_columns = {row[1]: row[2] for row in cursor.fetchall()}
+            
+            # 添加缺失的字段
+            for col_name, col_type in required_columns.items():
+                if col_name not in existing_columns:
+                    # 对于NOT NULL字段，需要提供默认值
+                    if 'NOT NULL' in col_type:
+                        if col_name == 'character_name':
+                            default_value = "DEFAULT '未知角色'"
+                        elif col_name == 'costume_name':
+                            default_value = "DEFAULT '未知皮肤'"
+                        elif col_name == 'quality':
+                            default_value = "DEFAULT 0"
+                        elif col_name == 'updated_at':
+                            default_value = "DEFAULT CURRENT_TIMESTAMP"
+                        else:
+                            default_value = "DEFAULT ''"
+                    else:
+                        default_value = ""
+                    
+                    # 跳过主键字段（无法后添加）
+                    if 'PRIMARY KEY' not in col_type:
+                        alter_sql = f"ALTER TABLE costumes ADD COLUMN {col_name} {col_type.replace(' NOT NULL', '')} {default_value}"
+                        try:
+                            cursor.execute(alter_sql)
+                            logger.info(f"已添加缺失字段: {col_name}")
+                        except sqlite3.Error as e:
+                            logger.warning(f"添加字段 {col_name} 失败: {e}")
+            
+            # 创建索引
+            indexes = [
+                "CREATE INDEX IF NOT EXISTS idx_costume_name ON costumes (costume_name)",
+                "CREATE INDEX IF NOT EXISTS idx_character_name ON costumes (character_name)", 
+                "CREATE INDEX IF NOT EXISTS idx_pinyin_index ON costumes (pinyin_index)",
+                "CREATE INDEX IF NOT EXISTS idx_first_char ON costumes (first_char)"
+            ]
+            
+            for index_sql in indexes:
+                try:
+                    cursor.execute(index_sql)
+                except sqlite3.Error as e:
+                    logger.warning(f"创建索引失败: {e}")
+            
             conn.commit()
+            logger.info("表结构检查和更新完成")
+            
     except sqlite3.Error as e:
-        logger.critical(f"创建或更新 'costumes' 表结构失败: {e}")
+        logger.critical(f"检查表结构失败: {e}")
+        return False
+    
+    return True
+
+def migrate_data():
+    """
+    读取 JSON 文件，将皮肤数据同步到数据库的 'costumes' 表中。
+    此脚本可以重复运行以更新数据。
+    """
+    # 1. 检查并更新表结构
+    if not check_and_add_missing_columns():
+        logger.critical("表结构检查失败，终止迁移")
         return
 
     # 2. 读取 JSON 文件
