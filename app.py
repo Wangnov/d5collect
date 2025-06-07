@@ -57,6 +57,9 @@ except json.JSONDecodeError:
     logger.critical("致命错误: 'costumes_data.json' 文件格式错误，无法解析！应用无法启动。")
     exit()
 
+# --- 数据库初始化 ---
+database.init_db()
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -87,5 +90,4 @@ def index():
 
 
 if __name__ == '__main__':
-    database.init_db()
     app.run(host='0.0.0.0', port=9877)
