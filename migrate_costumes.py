@@ -2,12 +2,46 @@ import sqlite3
 import json
 import logging
 from datetime import datetime
+from pypinyin import pinyin, Style
 
 # --- 配置 ---
 DATABASE_FILE = 'database.db'
 JSON_FILE = 'costumes_data.json'
 logger = logging.getLogger('migration_script')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def generate_pinyin_index(name):
+    """
+    为皮肤名称生成拼音索引和首字符
+    只处理首个有效字符（跳过标点符号）
+    :param name: 皮肤名称
+    :return: (pinyin_index, first_char) 元组
+    """
+    if not name:
+        return '', ''
+    
+    # 找到第一个有效字符（跳过标点符号）
+    first_char = ''
+    pinyin_list = []
+    
+    for char in name:
+        if char.isalpha() or '\u4e00' <= char <= '\u9fff':  # 英文字母或中文字符
+            first_char = char.lower()
+            
+            # 只为首个有效字符生成拼音
+            if '\u4e00' <= char <= '\u9fff':  # 中文字符
+                # 获取所有可能的拼音（支持多音字）
+                char_pinyins = pinyin(char, heteronym=True, style=Style.NORMAL)[0]
+                pinyin_list.extend(char_pinyins)
+            elif char.isalpha():  # 英文字符
+                pinyin_list.append(char.lower())
+            
+            break  # 只处理第一个有效字符
+    
+    # 去重并连接
+    pinyin_index = ','.join(list(set(pinyin_list)))
+    
+    return pinyin_index, first_char
 
 def migrate_data():
     """
@@ -29,6 +63,8 @@ def migrate_data():
                     quality_name TEXT,
                     image_url TEXT,
                     wiki_url TEXT,
+                    pinyin_index TEXT,
+                    first_char TEXT,
                     updated_at TIMESTAMP NOT NULL,
                     -- 创建一个联合唯一索引，确保同一个角色不会有同名皮肤
                     UNIQUE(character_name, costume_name)
@@ -37,6 +73,8 @@ def migrate_data():
             # 为常用搜索字段创建索引，可以极大提升查询速度
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_costume_name ON costumes (costume_name)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_character_name ON costumes (character_name)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_pinyin_index ON costumes (pinyin_index)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_first_char ON costumes (first_char)")
             
             logger.info("'costumes' 表已更新至最新结构。")
             conn.commit()
@@ -61,13 +99,15 @@ def migrate_data():
     sql_upsert = """
         INSERT INTO costumes (
             character_name, costume_name, quality, quality_name, 
-            image_url, wiki_url, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            image_url, wiki_url, pinyin_index, first_char, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(character_name, costume_name) DO UPDATE SET
             quality=excluded.quality,
             quality_name=excluded.quality_name,
             image_url=excluded.image_url,
             wiki_url=excluded.wiki_url,
+            pinyin_index=excluded.pinyin_index,
+            first_char=excluded.first_char,
             updated_at=excluded.updated_at;
     """
 
@@ -75,14 +115,20 @@ def migrate_data():
         with sqlite3.connect(DATABASE_FILE) as conn:
             cursor = conn.cursor()
             for item in data:
+                # 生成拼音索引
+                costume_name = item.get('name', '')
+                pinyin_index, first_char = generate_pinyin_index(costume_name)
+                
                 # 准备要插入或更新的数据
                 params = (
                     item.get('character'),
-                    item.get('name'),
+                    costume_name,
                     item.get('quality'),
                     item.get('quality_name'),
                     item.get('image_url'),
                     item.get('wiki_url'),
+                    pinyin_index,
+                    first_char,
                     datetime.now() # 自动生成当前时间作为更新时间
                 )
                 

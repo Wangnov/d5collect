@@ -4,10 +4,9 @@ import os
 import json
 import logging
 import datetime
-from logging.handlers import TimedRotatingFileHandler
-from pinyin import get_matching_costumes
 from flask import Flask, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
+from logging.handlers import TimedRotatingFileHandler
 
 import database
 
@@ -71,14 +70,28 @@ def index():
         if request.method == 'POST':
             input_text = request.form.get('input_text')
             if input_text:
-                costumes = get_matching_costumes(input_text)
+                # 对输入的每个字符进行匹配
+                costumes = []
+                total_matches = 0
+                
+                for char in input_text:
+                    # 跳过空格和标点符号
+                    if char.isspace() or not (char.isalpha() or '\u4e00' <= char <= '\u9fff'):
+                        costumes.append([])
+                        continue
+                    
+                    # 使用新的数据库搜索功能
+                    char_matches = database.search_costumes_by_pinyin(char, limit=20)
+                    costumes.append(char_matches)
+                    total_matches += len(char_matches)
+                
                 result = list(zip(input_text, costumes))
                 
                 # 记录到文件日志（用于调试和追踪）
-                logger.info(f"用户IP: {user_ip} | 输入内容: {input_text} | 匹配结果: {len(result)}个匹配")
+                logger.info(f"用户IP: {user_ip} | 输入内容: {input_text} | 匹配结果: {total_matches}个匹配")
                 
                 # 存储到数据库（用于Dashboard统计）
-                database.log_request(user_ip, input_text, len(result))
+                database.log_request(user_ip, input_text, total_matches)
 
         return render_template('index.html', 
                             input_text=input_text,

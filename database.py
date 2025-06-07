@@ -4,6 +4,7 @@ import logging
 import threading
 from contextlib import contextmanager
 from typing import List, Dict, Any
+from pypinyin import pinyin, Style
 
 # 获取在 app.py 中配置好的 logger 实例
 # 这样数据库模块的日志会和主应用写在同一个文件里
@@ -225,4 +226,95 @@ def get_recent_requests(limit: int = 100) -> List[Dict[str, Any]]:
             ]
     except sqlite3.Error as e:
         logger.error(f"获取最近请求失败！错误: {e}", exc_info=True)
+        return []
+
+def search_costumes_by_pinyin(query: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """
+    基于拼音索引搜索皮肤。
+    只匹配皮肤名称的首字符或首字符的拼音。
+    
+    Args:
+        query: 搜索查询（单个中文字符、英文字母）
+        limit: 返回结果数量限制
+    
+    Returns:
+        匹配的皮肤列表
+    """
+    if not query:
+        return []
+    
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            query_lower = query.lower().strip()
+            search_conditions = []
+            params = []
+            
+            # 1. 如果查询是单个字符，直接匹配首字符
+            if len(query) == 1:
+                if query_lower.isalpha() or '\u4e00' <= query <= '\u9fff':
+                    search_conditions.append("first_char = ?")
+                    params.append(query_lower)
+            
+            # 2. 如果查询是拼音，匹配拼音索引
+            if query_lower.isalpha() and len(query_lower) > 1:
+                search_conditions.append("pinyin_index LIKE ?")
+                params.append(f"%{query_lower}%")
+            
+            # 3. 如果查询是中文字符，生成其拼音进行匹配
+            if '\u4e00' <= query[0] <= '\u9fff':
+                # 获取查询字符的所有可能拼音
+                query_pinyins = pinyin(query[0], heteronym=True, style=Style.NORMAL)[0]
+                for py in query_pinyins:
+                    search_conditions.append("pinyin_index LIKE ?")
+                    params.append(f"%{py}%")
+            
+            # 4. 皮肤名称直接匹配（作为备选）
+            search_conditions.append("costume_name LIKE ?")
+            params.append(f"{query}%")
+            
+            if not search_conditions:
+                return []
+            
+            # 构建SQL查询
+            where_clause = " OR ".join(search_conditions)
+            sql = f"""
+                SELECT character_name, costume_name, quality, quality_name, 
+                       image_url, wiki_url, pinyin_index, first_char
+                FROM costumes 
+                WHERE {where_clause}
+                ORDER BY 
+                    CASE 
+                        WHEN first_char = ? THEN 1
+                        WHEN costume_name LIKE ? THEN 2
+                        ELSE 3
+                    END,
+                    character_name, costume_name
+                LIMIT ?
+            """
+            
+            # 添加排序参数
+            sort_params = [query_lower, f"{query}%", limit]
+            all_params = params + sort_params
+            
+            cursor.execute(sql, all_params)
+            results = cursor.fetchall()
+            
+            return [
+                {
+                    'character': row[0],
+                    'name': row[1],
+                    'quality': row[2],
+                    'quality_name': row[3],
+                    'image_url': row[4],
+                    'wiki_url': row[5],
+                    'pinyin_index': row[6],
+                    'first_char': row[7]
+                }
+                for row in results
+            ]
+            
+    except sqlite3.Error as e:
+        logger.error(f"拼音搜索失败！错误: {e}", exc_info=True)
         return []
