@@ -228,93 +228,85 @@ def get_recent_requests(limit: int = 100) -> List[Dict[str, Any]]:
         logger.error(f"获取最近请求失败！错误: {e}", exc_info=True)
         return []
 
-def search_costumes_by_pinyin(query: str, limit: int = 50) -> List[Dict[str, Any]]:
+def search_costumes_by_pinyin(query: str, limit: int = 20) -> List[Dict[str, Any]]:
     """
-    基于拼音索引搜索皮肤。
-    只匹配皮肤名称的首字符或首字符的拼音。
-    
+    基于拼音索引搜索皮肤（优化版）。
+    先从数据库中获取所有可能的匹配项，然后在Python中进行精确排序和标记。
+
     Args:
-        query: 搜索查询（单个中文字符、英文字母）
-        limit: 返回结果数量限制
-    
+        query: 搜索查询（单个中文字符或英文字母）。
+        limit: 返回结果数量限制。
+
     Returns:
-        匹配的皮肤列表
+        匹配的皮肤列表，包含正确的 'exact_match' 标志。
     """
     if not query:
         return []
-    
+
+    query_lower = query.lower().strip()
+    # 获取查询字符的所有可能拼音
+    try:
+        possible_pinyins = pinyin(query_lower, style=Style.NORMAL, heteronym=True)[0]
+    except Exception:
+        possible_pinyins = [query_lower] if query_lower.isalpha() else []
+
+
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
+
+            # 1. 构建查询条件，筛选出所有可能的候选项
+            #   - 首字符精确匹配
+            #   - 任何一个读音匹配
+            where_conditions = ["first_char = ?"]
+            params = [query_lower]
+            for p in possible_pinyins:
+                where_conditions.append("pinyin_index LIKE ?")
+                params.append(f"%{p}%")
+
+            where_clause = " OR ".join(where_conditions)
             
-            query_lower = query.lower().strip()
-            search_conditions = []
-            params = []
-            
-            # 1. 如果查询是单个字符，直接匹配首字符
-            if len(query) == 1:
-                if query_lower.isalpha() or '\u4e00' <= query <= '\u9fff':
-                    search_conditions.append("first_char = ?")
-                    params.append(query_lower)
-            
-            # 2. 如果查询是拼音，匹配拼音索引
-            if query_lower.isalpha() and len(query_lower) > 1:
-                search_conditions.append("pinyin_index LIKE ?")
-                params.append(f"%{query_lower}%")
-            
-            # 3. 如果查询是中文字符，生成其拼音进行匹配
-            if '\u4e00' <= query[0] <= '\u9fff':
-                # 获取查询字符的所有可能拼音
-                query_pinyins = pinyin(query[0], heteronym=True, style=Style.NORMAL)[0]
-                for py in query_pinyins:
-                    search_conditions.append("pinyin_index LIKE ?")
-                    params.append(f"%{py}%")
-            
-            # 4. 皮肤名称直接匹配（作为备选）
-            search_conditions.append("costume_name LIKE ?")
-            params.append(f"{query}%")
-            
-            if not search_conditions:
-                return []
-            
-            # 构建SQL查询
-            where_clause = " OR ".join(search_conditions)
+            # 2. 从数据库获取所有潜在匹配的皮肤，设置一个较高的内部limit以确保能包含所有相关项
             sql = f"""
                 SELECT character_name, costume_name, quality, quality_name, 
-                       image_url, wiki_url, pinyin_index, first_char
+                    image_url, wiki_url, pinyin_index, first_char
                 FROM costumes 
                 WHERE {where_clause}
-                ORDER BY 
-                    CASE 
-                        WHEN first_char = ? THEN 1
-                        WHEN costume_name LIKE ? THEN 2
-                        ELSE 3
-                    END,
-                    character_name, costume_name
-                LIMIT ?
+                LIMIT 100
             """
             
-            # 添加排序参数
-            sort_params = [query_lower, f"{query}%", limit]
-            all_params = params + sort_params
-            
-            cursor.execute(sql, all_params)
+            cursor.execute(sql, params)
             results = cursor.fetchall()
-            
-            return [
-                {
+
+            # 3. 在Python中处理结果，以确保高亮逻辑的准确性
+            processed_results = []
+            for row in results:
+                costume = {
                     'character': row[0],
                     'name': row[1],
                     'quality': row[2],
                     'quality_name': row[3],
                     'image_url': row[4],
-                    'wiki_url': row[5],
-                    'pinyin_index': row[6],
-                    'first_char': row[7]
+                    'wiki_url': row[5]
                 }
-                for row in results
-            ]
+                
+                # 核心：在这里判断是否为完全匹配
+                first_char_db = row[7]
+                is_exact_match = (first_char_db == query_lower)
+                costume['exact_match'] = is_exact_match
+                
+                # 设置排序优先级：完全匹配的排在最前面
+                sort_priority = 1 if is_exact_match else 2
+                processed_results.append((sort_priority, costume))
+
+            # 4. 根据优先级和皮肤名称进行排序
+            processed_results.sort(key=lambda x: (x[0], x[1]['name']))
+
+            # 5. 应用最终的数量限制并返回结果
+            final_results = [item[1] for item in processed_results][:limit]
+            print(final_results)
+            return final_results
             
     except sqlite3.Error as e:
-        logger.error(f"拼音搜索失败！错误: {e}", exc_info=True)
+        logger.error(f"皮肤拼音搜索失败！查询: '{query}', 错误: {e}", exc_info=True)
         return []
