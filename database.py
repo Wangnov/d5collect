@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 # 这样数据库模块的日志会和主应用写在同一个文件里
 logger = logging.getLogger('my_app')
 
-DATABASE_FILE = 'dashboard.db'
+DATABASE_FILE = 'database.db'
 
 # 简单的连接池实现
 class ConnectionPool:

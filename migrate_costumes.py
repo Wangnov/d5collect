@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 
 # --- 配置 ---
-DATABASE_FILE = 'dashboard.db'
+DATABASE_FILE = 'database.db'
 JSON_FILE = 'costumes_data.json'
 logger = logging.getLogger('migration_script')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
