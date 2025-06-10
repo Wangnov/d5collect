@@ -58,17 +58,19 @@ def dashboard_view():
         stats = get_request_stats(days=days)
         recent_reqs = get_recent_requests(limit=20)
         
-        # 准备图表数据
-        daily_stats_json = json.dumps(stats.get('daily_stats', []))
-        # 传递独立访客数据
-        daily_visitors_json = json.dumps(stats.get('daily_unique_visitors', []))
-        
+        # 将所有动态数据打包到一个字典中
+        page_data = {
+            "stats": stats,
+            "recent_requests": recent_reqs,
+        }
+        # 将整个数据包序列化为JSON字符串
+        page_data_json = json.dumps(page_data)
+
         return render_template(
             'dashboard.html', 
             stats=stats, 
             recent_requests=recent_reqs,
-            daily_stats_json=daily_stats_json,
-            daily_visitors_json=daily_visitors_json,
+            page_data_json=page_data_json, # 传递这个完整的JSON字符串
             active_days=days
         )
     except Exception as e:

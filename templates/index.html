@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" href="https://webinput.nie.netease.com/img/id5/icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script>
         tailwind.config = {
             theme: {
@@ -29,10 +30,8 @@
 </head>
 
 <body class="bg-gray-50 min-h-screen font-sans antialiased flex flex-col">
-    <!-- 悬浮按钮组 -->
     <div class="fixed bottom-4 right-4 z-50">
         <div id="floatingButtonGroup" class="flex flex-col items-end space-y-2">
-            <!-- 展开/折叠按钮 -->
             <button id="toggleButton"
                 class="bg-gradient-purple-blue hover:bg-gradient-purple-blue-hover text-white rounded-full p-2 shadow-lg transition-all duration-300 hover:scale-105">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
@@ -41,9 +40,7 @@
                 </svg>
             </button>
 
-            <!-- 按钮组 (默认隐藏) -->
             <div id="buttonList" class="hidden flex flex-col space-y-2 transition-all duration-300">
-                <!-- 帮助按钮 -->
                 <button id="helpButton"
                     class="bg-gradient-purple-blue hover:bg-gradient-purple-blue-hover text-white rounded-full p-2 shadow-lg transition-all duration-300 hover:scale-105">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
@@ -53,7 +50,6 @@
                     </svg>
                 </button>
 
-                <!-- 联系我按钮 -->
                 <button id="contactButton"
                     class="bg-gradient-purple-blue hover:bg-gradient-purple-blue-hover text-white rounded-full p-2 shadow-lg transition-all duration-300 hover:scale-105">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
@@ -66,7 +62,6 @@
         </div>
     </div>
 
-    <!-- 帮助弹窗 -->
     <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
@@ -140,7 +135,6 @@
         </div>
     </div>
 
-    <!-- 联系我弹窗 -->
     <div id="contactModal"
         class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
@@ -203,679 +197,117 @@
         </div>
     </div>
     <main>
-    <div class="container mx-auto px-4 py-8 max-w-5xl">
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">谐音字皮肤查询</h1>
-            <p class="text-gray-500">输入一句话，快速查找到谐音字开头的皮肤</p>
-        </div>
-
-        <form id="searchForm" method="POST" class="mb-12 bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-            <div class="flex flex-col sm:flex-row gap-4">
-                <input type="text" name="input_text" placeholder="输入你想查找的话..." autocomplete="off"
-                    class="flex-1 px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-800 text-lg transition duration-200 ease-in-out">
-                <button type="submit"
-                    class="px-8 py-3 bg-gradient-purple-blue hover:bg-gradient-purple-blue-hover text-white rounded-xl transition-all duration-300 font-semibold text-lg shadow-md">
-                    查找
-                </button>
-            </div>
-        </form>
-
-        <!-- 加载动画覆盖层 -->
-        <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-xl p-8 shadow-2xl flex flex-col items-center">
-                <div class="loading-spinner mb-4"></div>
-                <p class="text-gray-700 font-medium">加载中...</p>
-            </div>
-        </div>
-
-        {% if input_text %}
-        <div class="space-y-8 bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-            <h2 class="text-2xl font-bold text-gray-900">查询结果</h2>
-
-            <div class="flex flex-row gap-4 mb-6">
-                <!-- 品质筛选 - 多选下拉 -->
-                <div class="relative w-1/2">
-                    <div class="flex flex-wrap items-center gap-2 p-3 border border-gray-300 rounded-xl bg-white min-h-[50px] cursor-pointer shadow-sm"
-                        id="qualityTags">
-                        <input type="text" id="qualitySearch" placeholder="筛选品质..."
-                            class="flex-1 min-w-[60px] outline-none text-gray-700 py-1 bg-transparent">
-                    </div>
-                    <div id="qualityDropdown"
-                        class="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl hidden max-h-60 overflow-y-auto">
-                        <div class="p-2">
-                            <div class="flex items-center gap-2 p-2 hover:bg-primary-50 rounded-lg cursor-pointer transition-colors duration-200"
-                                data-value="">
-                                <input type="checkbox" id="qualityAll"
-                                    class="h-5 w-5 text-primary-600 rounded focus:ring-primary-500">
-                                <label for="qualityAll" class="cursor-pointer flex-1 text-gray-800">所有品质</label>
-                            </div>
-                            <!-- 品质选项将通过JS动态添加 -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 角色筛选 - 多选下拉 -->
-                <div class="relative w-1/2">
-                    <div class="flex flex-wrap items-center gap-2 p-3 border border-gray-300 rounded-xl bg-white min-h-[50px] cursor-pointer shadow-sm"
-                        id="characterTags">
-                        <input type="text" id="characterSearch" placeholder="筛选角色..."
-                            class="flex-1 min-w-[50px] outline-none text-gray-700 py-1 bg-transparent">
-                    </div>
-                    <div id="characterDropdown"
-                        class="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl hidden max-h-60 overflow-y-auto">
-                        <div class="p-2">
-                            <div class="flex items-center gap-2 p-2 hover:bg-primary-50 rounded-lg cursor-pointer transition-colors duration-200"
-                                data-value="">
-                                <input type="checkbox" id="characterAll"
-                                    class="h-5 w-5 text-primary-600 rounded focus:ring-primary-500">
-                                <label for="characterAll" class="cursor-pointer flex-1 text-gray-800">所有角色</label>
-                            </div>
-                            <!-- 角色选项将通过JS动态添加 -->
-                        </div>
-                    </div>
-                </div>
+        <div class="container mx-auto px-4 py-8 max-w-5xl">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-extrabold text-gray-900 mb-2">谐音字皮肤查询</h1>
+                <p class="text-gray-500">输入一句话，快速查找到谐音字开头的皮肤</p>
             </div>
 
-            <!-- 字符导航栏 -->
-            <div id="characterNavigation" class="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-gray-200">
-                <div class="text-sm font-medium text-gray-700 mb-3">快速跳转到字符：</div>
-                <div class="flex flex-wrap gap-2" id="characterNavButtons">
-                    {% for char, costumes in result %}
-                    <button onclick="scrollToCharacter('{{ char }}')" 
-                        class="character-nav-btn px-3 py-2 bg-white hover:bg-gradient-purple-blue hover:text-white text-gray-700 rounded-lg border border-gray-300 transition-all duration-300 font-medium text-sm shadow-sm hover:shadow-md transform hover:scale-105">
-                        {{ char }}
+            <form id="searchForm" method="POST" class="mb-12 bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input type="text" name="input_text" placeholder="输入你想查找的话..." autocomplete="off"
+                        class="flex-1 px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-800 text-lg transition duration-200 ease-in-out">
+                    <button type="submit"
+                        class="px-8 py-3 bg-gradient-purple-blue hover:bg-gradient-purple-blue-hover text-white rounded-xl transition-all duration-300 font-semibold text-lg shadow-md">
+                        查找
                     </button>
-                    {% endfor %}
+                </div>
+            </form>
+
+            <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-xl p-8 shadow-2xl flex flex-col items-center">
+                    <div class="loading-spinner mb-4"></div>
+                    <p class="text-gray-700 font-medium">加载中...</p>
                 </div>
             </div>
 
-            <div
-                class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-h-[500px] overflow-y-auto pb-4 px-4 custom-scrollbar" id="resultsContainer">
-                {% for char, costumes in result %}
-                <div class="flex flex-col items-center" id="char-{{ char }}">
-                    <div class="text-xl font-semibold text-gray-800 mb-4">{{ char }}</div>
+            {% if input_text %}
+            <div class="space-y-8 bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-900">查询结果</h2>
 
-                    <div class="w-full space-y-4">
-                        {% for costume in costumes %}
-                        <div class="{% if costume.exact_match %}bg-gradient-to-r from-amber-50 to-amber-100 shadow-lg ring-2 ring-amber-300{% else %}bg-white shadow-md ring-1 ring-gray-200{% endif %} p-4 rounded-xl hover:shadow-xl transition-all duration-300 min-w-[100px] transform hover:-translate-y-1 cursor-pointer"
-                            data-id="{{ costume.name }}">
-                            <a href="{{ costume.wiki_url }}" target="_blank" class="block">
-                                <img src="{{ costume.image_url }}" alt="{{ costume.name }}"
-                                    class="w-full h-auto rounded-lg object-contain aspect-square hover:scale-105 transition-transform duration-300">
-                            </a>
-                            <div class="mt-4 text-center">
-                                <p class="text-base font-semibold text-gray-800 truncate">{{ costume.character }}</p>
-                                <p class="text-sm text-gray-500 mt-1">{{ costume.quality_name }}</p>
+                <div class="flex flex-row gap-4 mb-6">
+                    <div class="relative w-1/2">
+                        <div class="flex flex-wrap items-center gap-2 p-3 border border-gray-300 rounded-xl bg-white min-h-[50px] cursor-pointer shadow-sm"
+                            id="qualityTags">
+                            <input type="text" id="qualitySearch" placeholder="筛选品质..."
+                                class="flex-1 min-w-[60px] outline-none text-gray-700 py-1 bg-transparent">
+                        </div>
+                        <div id="qualityDropdown"
+                            class="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl hidden max-h-60 overflow-y-auto">
+                            <div class="p-2">
+                                <div class="flex items-center gap-2 p-2 hover:bg-primary-50 rounded-lg cursor-pointer transition-colors duration-200"
+                                    data-value="">
+                                    <input type="checkbox" id="qualityAll"
+                                        class="h-5 w-5 text-primary-600 rounded focus:ring-primary-500">
+                                    <label for="qualityAll" class="cursor-pointer flex-1 text-gray-800">所有品质</label>
+                                </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="relative w-1/2">
+                        <div class="flex flex-wrap items-center gap-2 p-3 border border-gray-300 rounded-xl bg-white min-h-[50px] cursor-pointer shadow-sm"
+                            id="characterTags">
+                            <input type="text" id="characterSearch" placeholder="筛选角色..."
+                                class="flex-1 min-w-[50px] outline-none text-gray-700 py-1 bg-transparent">
+                        </div>
+                        <div id="characterDropdown"
+                            class="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl hidden max-h-60 overflow-y-auto">
+                            <div class="p-2">
+                                <div class="flex items-center gap-2 p-2 hover:bg-primary-50 rounded-lg cursor-pointer transition-colors duration-200"
+                                    data-value="">
+                                    <input type="checkbox" id="characterAll"
+                                        class="h-5 w-5 text-primary-600 rounded focus:ring-primary-500">
+                                    <label for="characterAll" class="cursor-pointer flex-1 text-gray-800">所有角色</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="characterNavigation"
+                    class="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-gray-200">
+                    <div class="text-sm font-medium text-gray-700 mb-3">快速跳转到字符：</div>
+                    <div class="flex flex-wrap gap-2" id="characterNavButtons">
+                        {% for char, costumes in result %}
+                        <button onclick="scrollToCharacter('{{ char }}')"
+                            class="character-nav-btn px-3 py-2 bg-white hover:bg-gradient-purple-blue hover:text-white text-gray-700 rounded-lg border border-gray-300 transition-all duration-300 font-medium text-sm shadow-sm hover:shadow-md transform hover:scale-105">
+                            {{ char }}
+                        </button>
                         {% endfor %}
                     </div>
                 </div>
-                {% endfor %}
+
+                <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-h-[500px] overflow-y-auto pb-4 px-4 custom-scrollbar"
+                    id="resultsContainer">
+                    {% for char, costumes in result %}
+                    <div class="flex flex-col items-center" id="char-{{ char }}">
+                        <div class="text-xl font-semibold text-gray-800 mb-4">{{ char }}</div>
+
+                        <div class="w-full space-y-4">
+                            {% for costume in costumes %}
+                            <div class="{% if costume.exact_match %}bg-gradient-to-r from-amber-50 to-amber-100 shadow-lg ring-2 ring-amber-300{% else %}bg-white shadow-md ring-1 ring-gray-200{% endif %} p-4 rounded-xl hover:shadow-xl transition-all duration-300 min-w-[100px] transform hover:-translate-y-1 cursor-pointer"
+                                data-id="{{ costume.name }}">
+                                <a href="{{ costume.wiki_url }}" target="_blank" class="block">
+                                    <img src="{{ costume.image_url }}" alt="{{ costume.name }}"
+                                        class="w-full h-auto rounded-lg object-contain aspect-square hover:scale-105 transition-transform duration-300">
+                                </a>
+                                <div class="mt-4 text-center">
+                                    <p class="text-base font-semibold text-gray-800 truncate">{{ costume.character }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 mt-1">{{ costume.quality_name }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
+            {% endif %}
         </div>
-        {% endif %}
-    </div>
     </main>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // 提取所有品质和角色选项
-            const costumes = [];
 
-            // 等待DOM完全加载后再获取所有卡片元素
-            setTimeout(() => {
-                // 获取所有卡片元素
-                const cardElements = document.querySelectorAll('div[data-id]');
-
-                // 遍历所有卡片元素并添加到costumes数组
-                cardElements.forEach(element => {
-                    const id = element.dataset.id;
-                    const character = element.querySelector('.text-base.font-semibold').textContent;
-                    const quality_name = element.querySelector('.text-sm.text-gray-500').textContent;
-
-                    costumes.push({
-                        id: id,
-                        quality_name: quality_name,
-                        character: character,
-                        element: element
-                    });
-                });
-
-                // 初始化筛选下拉菜单
-                initializeFilters();
-            }, 100);
-
-            // 初始化筛选状态
-            const filters = {
-                quality: [],
-                character: []
-            };
-
-            // 获取DOM元素
-            const qualityTags = document.getElementById('qualityTags');
-            const qualityDropdown = document.getElementById('qualityDropdown');
-            const qualitySearch = document.getElementById('qualitySearch');
-            const qualityAll = document.getElementById('qualityAll');
-
-            const characterTags = document.getElementById('characterTags');
-            const characterDropdown = document.getElementById('characterDropdown');
-            const characterSearch = document.getElementById('characterSearch');
-            const characterAll = document.getElementById('characterAll');
-
-            // 初始化筛选器函数
-            function initializeFilters() {
-
-                // 填充品质下拉菜单
-                const qualitySet = new Set();
-                costumes.forEach(c => qualitySet.add(c.quality_name));
-                const qualityOptions = Array.from(qualitySet);
-
-                qualityOptions.forEach(quality => {
-                    const optionId = `quality-${quality.replace(/\s+/g, '-')}`;
-                    const optionDiv = document.createElement('div');
-                    optionDiv.className = 'flex items-center gap-2 p-2 hover:bg-primary-50 rounded-lg cursor-pointer transition-colors duration-200';
-                    optionDiv.dataset.value = quality;
-                    optionDiv.innerHTML = `
-                    <input type="checkbox" id="${optionId}" class="h-5 w-5 text-primary-600 rounded focus:ring-primary-500">
-                    <label for="${optionId}" class="cursor-pointer flex-1 text-gray-800">${quality}</label>
-                `;
-                    qualityDropdown.querySelector('div').appendChild(optionDiv);
-
-                    // 添加点击事件
-                    optionDiv.addEventListener('click', function (e) {
-                        const checkbox = this.querySelector('input[type="checkbox"]');
-                        checkbox.checked = !checkbox.checked;
-
-                        if (checkbox.checked) {
-                            addFilter('quality', quality);
-                        } else {
-                            removeFilter('quality', quality);
-                        }
-
-                        e.stopPropagation();
-                    });
-                });
-
-                // 填充角色下拉菜单
-                const characterSet = new Set();
-                costumes.forEach(c => characterSet.add(c.character));
-                const characterOptions = Array.from(characterSet);
-
-                characterOptions.forEach(character => {
-                    const optionId = `character-${character.replace(/\s+/g, '-')}`;
-                    const optionDiv = document.createElement('div');
-                    optionDiv.className = 'flex items-center gap-2 p-2 hover:bg-primary-50 rounded-lg cursor-pointer transition-colors duration-200';
-                    optionDiv.dataset.value = character;
-                    optionDiv.innerHTML = `
-                    <input type="checkbox" id="${optionId}" class="h-5 w-5 text-primary-600 rounded focus:ring-primary-500">
-                    <label for="${optionId}" class="cursor-pointer flex-1 text-gray-800">${character}</label>
-                `;
-                    characterDropdown.querySelector('div').appendChild(optionDiv);
-
-                    // 添加点击事件
-                    optionDiv.addEventListener('click', function (e) {
-                        const checkbox = this.querySelector('input[type="checkbox"]');
-                        checkbox.checked = !checkbox.checked;
-
-                        if (checkbox.checked) {
-                            addFilter('character', character);
-                        } else {
-                            removeFilter('character', character);
-                        }
-
-                        e.stopPropagation();
-                    });
-                });
-
-                // 全选/取消全选品质
-                qualityAll.parentElement.addEventListener('click', function (e) {
-                    const isChecked = !qualityAll.checked;
-                    qualityAll.checked = isChecked;
-
-                    const checkboxes = qualityDropdown.querySelectorAll('input[type="checkbox"]:not(#qualityAll)');
-                    checkboxes.forEach(cb => {
-                        cb.checked = isChecked;
-                    });
-
-                    if (isChecked) {
-                        // 全选
-                        filters.quality = [...qualityOptions];
-                    } else {
-                        // 取消全选
-                        filters.quality = [];
-                    }
-
-                    updateTags('quality');
-                    applyFilters();
-                    e.stopPropagation();
-                });
-
-                // 全选/取消全选角色
-                characterAll.parentElement.addEventListener('click', function (e) {
-                    const isChecked = !characterAll.checked;
-                    characterAll.checked = isChecked;
-
-                    const checkboxes = characterDropdown.querySelectorAll('input[type="checkbox"]:not(#characterAll)');
-                    checkboxes.forEach(cb => {
-                        cb.checked = isChecked;
-                    });
-
-                    if (isChecked) {
-                        // 全选
-                        filters.character = [...characterOptions];
-                    } else {
-                        // 取消全选
-                        filters.character = [];
-                    }
-
-                    updateTags('character');
-                    applyFilters();
-                    e.stopPropagation();
-                });
-
-                // 点击输入框显示下拉菜单
-                qualitySearch.addEventListener('click', function (e) {
-                    qualityDropdown.classList.remove('hidden');
-                    characterDropdown.classList.add('hidden');
-                    e.stopPropagation();
-                });
-
-                qualityTags.addEventListener('click', function (e) {
-                    qualityDropdown.classList.remove('hidden');
-                    characterDropdown.classList.add('hidden');
-                    qualitySearch.focus();
-                    e.stopPropagation();
-                });
-
-                characterSearch.addEventListener('click', function (e) {
-                    characterDropdown.classList.remove('hidden');
-                    qualityDropdown.classList.add('hidden');
-                    e.stopPropagation();
-                });
-
-                characterTags.addEventListener('click', function (e) {
-                    characterDropdown.classList.remove('hidden');
-                    qualityDropdown.classList.add('hidden');
-                    characterSearch.focus();
-                    e.stopPropagation();
-                });
-
-                // 点击页面其他地方关闭下拉菜单
-                document.addEventListener('click', function () {
-                    qualityDropdown.classList.add('hidden');
-                    characterDropdown.classList.add('hidden');
-                });
-
-                // 搜索功能
-                qualitySearch.addEventListener('input', function () {
-                    const searchText = this.value.toLowerCase();
-                    const options = qualityDropdown.querySelectorAll('div[data-value]:not([data-value=""])');
-
-                    options.forEach(option => {
-                        const value = option.dataset.value.toLowerCase();
-                        if (value.includes(searchText)) {
-                            option.style.display = 'flex';
-                        } else {
-                            option.style.display = 'none';
-                        }
-                    });
-                });
-
-                characterSearch.addEventListener('input', function () {
-                    const searchText = this.value.toLowerCase();
-                    const options = characterDropdown.querySelectorAll('div[data-value]:not([data-value=""])');
-
-                    options.forEach(option => {
-                        const value = option.dataset.value.toLowerCase();
-                        if (value.includes(searchText)) {
-                            option.style.display = 'flex';
-                        } else {
-                            option.style.display = 'none';
-                        }
-                    });
-                });
-
-                // 添加筛选条件
-                function addFilter(type, value) {
-                    if (!filters[type].includes(value)) {
-                        filters[type].push(value);
-                        updateTags(type);
-                        applyFilters();
-                    }
-                }
-
-                // 移除筛选条件
-                function removeFilter(type, value) {
-                    const index = filters[type].indexOf(value);
-                    if (index !== -1) {
-                        filters[type].splice(index, 1);
-                        updateTags(type);
-                        applyFilters();
-                    }
-                }
-
-                // 更新标签显示
-                function updateTags(type) {
-                    const container = type === 'quality' ? qualityTags : characterTags;
-                    const search = type === 'quality' ? qualitySearch : characterSearch;
-
-                    // 移除现有标签
-                    const existingTags = container.querySelectorAll('.filter-tag');
-                    existingTags.forEach(tag => tag.remove());
-
-                    // 添加新标签
-                    filters[type].forEach(value => {
-                        const tag = document.createElement('div');
-                        tag.className = 'filter-tag flex items-center bg-primary-500 text-white text-sm rounded-full px-3 py-1';
-                        tag.innerHTML = `
-                        <span class="mr-1">${value}</span>
-                        <button type="button" class="text-white hover:text-gray-200 focus:outline-none" data-value="${value}">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    `;
-
-                        // 添加删除事件
-                        tag.querySelector('button').addEventListener('click', function (e) {
-                            removeFilter(type, this.dataset.value);
-                            e.stopPropagation();
-                        });
-
-                        container.insertBefore(tag, search);
-                    });
-
-                    // 更新全选复选框状态
-                    const allCheckbox = type === 'quality' ? qualityAll : characterAll;
-                    const options = type === 'quality' ? qualityOptions : characterOptions;
-
-                    if (filters[type].length === options.length) {
-                        allCheckbox.checked = true;
-                    } else {
-                        allCheckbox.checked = false;
-                    }
-                }
-
-                // 应用筛选
-                function applyFilters() {
-                    // 首先隐藏所有字符分组
-                    document.querySelectorAll('[id^="char-"]').forEach(charDiv => {
-                        charDiv.style.display = 'none';
-                    });
-                    
-                    costumes.forEach(costume => {
-                        const matchesQuality = filters.quality.length === 0 || filters.quality.includes(costume.quality_name);
-                        const matchesCharacter = filters.character.length === 0 || filters.character.includes(costume.character);
-
-                        if (matchesQuality && matchesCharacter) {
-                            costume.element.style.display = 'block';
-                            // 显示对应的字符分组
-                            const charDiv = costume.element.closest('[id^="char-"]');
-                            if (charDiv) {
-                                charDiv.style.display = 'flex';
-                            }
-                        } else {
-                            costume.element.style.display = 'none';
-                        }
-                    });
-                    
-                    // 更新字符导航栏
-                    updateCharacterNavigation();
-                }
-            } // 关闭initializeFilters函数
-        });
-
-        // 悬浮按钮组功能
-        const toggleButton = document.getElementById('toggleButton');
-        const buttonList = document.getElementById('buttonList');
-        const helpButton = document.getElementById('helpButton');
-        const contactButton = document.getElementById('contactButton');
-        const helpModal = document.getElementById('helpModal');
-        const contactModal = document.getElementById('contactModal');
-        const closeButtons = document.querySelectorAll('.closeModal');
-
-        // 展开/折叠按钮组
-        toggleButton.addEventListener('click', function () {
-            buttonList.classList.toggle('hidden');
-            // 切换箭头方向
-            const svg = this.querySelector('svg path');
-            if (buttonList.classList.contains('hidden')) {
-                svg.setAttribute('d', 'M19 15l-7-7-7 7'); // 向上箭头（隐藏时显示向上，表示可展开）
-            } else {
-                svg.setAttribute('d', 'M19 9l-7 7-7-7'); // 向下箭头（显示时显示向下，表示可收起）
-            }
-        });
-
-        // 打开帮助弹窗
-        helpButton.addEventListener('click', function () {
-            helpModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // 防止背景滚动
-        });
-
-        // 打开联系我弹窗
-        contactButton.addEventListener('click', function () {
-            contactModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // 防止背景滚动
-        });
-
-        // 关闭所有弹窗
-        function closeAllModals() {
-            helpModal.classList.add('hidden');
-            contactModal.classList.add('hidden');
-            document.body.style.overflow = 'auto'; // 恢复滚动
-        }
-
-        // 为所有关闭按钮添加事件
-        closeButtons.forEach(button => {
-            button.addEventListener('click', closeAllModals);
-        });
-
-        // 点击弹窗背景关闭
-        [helpModal, contactModal].forEach(modal => {
-            modal.addEventListener('click', function (e) {
-                if (e.target === this) {
-                    closeAllModals();
-                }
-            });
-        });
-
-        // ESC键关闭弹窗
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && (!helpModal.classList.contains('hidden') || !contactModal.classList.contains('hidden'))) {
-                closeAllModals();
-            }
-        })
-
-        // 加载动画控制
-        function showLoading() {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.classList.add('show');
-        }
-
-        function hideLoading() {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.classList.remove('show');
-        }
-
-        // 表单提交处理
-        document.getElementById('searchForm').addEventListener('submit', function(e) {
-            showLoading();
-            
-            // 确保最小显示时间0.5秒
-            const startTime = Date.now();
-            
-            // 在实际提交前确保动画已显示
-            setTimeout(() => {
-                // 表单正常提交，这里不需要阻止默认行为
-                // 因为我们希望表单正常提交到后端
-            }, 100);
-        });
-
-        // 字符导航功能
-        window.scrollToCharacter = function(char) {
-            const targetElement = document.getElementById('char-' + char);
-            const resultsContainer = document.getElementById('resultsContainer');
-            
-            if (targetElement && resultsContainer) {
-                // 计算目标元素在容器中的位置
-                const containerRect = resultsContainer.getBoundingClientRect();
-                const targetRect = targetElement.getBoundingClientRect();
-                const scrollTop = resultsContainer.scrollTop;
-                
-                // 计算需要滚动的距离
-                const targetScrollTop = scrollTop + (targetRect.top - containerRect.top) - 20; // 20px的偏移量
-                
-                // 平滑滚动到目标位置
-                resultsContainer.scrollTo({
-                    top: targetScrollTop,
-                    behavior: 'smooth'
-                });
-                
-                // 高亮显示目标字符
-                highlightCharacter(char);
-            }
-        };
-        
-        // 高亮字符功能
-        function highlightCharacter(char) {
-            // 移除所有现有的高亮
-            document.querySelectorAll('.character-nav-btn').forEach(btn => {
-                btn.classList.remove('bg-gradient-purple-blue', 'text-white');
-                btn.classList.add('bg-white', 'text-gray-700');
-            });
-            
-            // 高亮当前字符按钮
-            const targetBtn = document.querySelector(`button[onclick="scrollToCharacter('${char}')"]`);
-            if (targetBtn) {
-                targetBtn.classList.remove('bg-white', 'text-gray-700');
-                targetBtn.classList.add('bg-gradient-purple-blue', 'text-white');
-                
-                // 2秒后移除高亮
-                setTimeout(() => {
-                    targetBtn.classList.remove('bg-gradient-purple-blue', 'text-white');
-                    targetBtn.classList.add('bg-white', 'text-gray-700');
-                }, 2000);
-            }
-        }
-        
-        // 更新字符导航栏的可见性
-        function updateCharacterNavigation() {
-            const navButtons = document.querySelectorAll('.character-nav-btn');
-            const visibleChars = new Set();
-            
-            // 检查哪些字符当前可见
-            document.querySelectorAll('[id^="char-"]').forEach(charDiv => {
-                if (charDiv.style.display !== 'none') {
-                    const char = charDiv.id.replace('char-', '');
-                    visibleChars.add(char);
-                }
-            });
-            
-            // 更新导航按钮的可见性
-            navButtons.forEach(btn => {
-                const char = btn.textContent.trim();
-                if (visibleChars.has(char)) {
-                    btn.style.display = 'inline-block';
-                } else {
-                    btn.style.display = 'none';
-                }
-            });
-            
-            // 如果没有可见的字符，隐藏整个导航栏
-            const navigationDiv = document.getElementById('characterNavigation');
-            if (navigationDiv) {
-                if (visibleChars.size === 0) {
-                    navigationDiv.style.display = 'none';
-                } else {
-                    navigationDiv.style.display = 'block';
-                }
-            }
-        }
-    </script>
-    <style>
-        /* Custom Scrollbar for Webkit browsers */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            /* gray-300 */
-            border-radius: 10px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-            /* gray-400 */
-        }
-
-        /* 加载动画样式 */
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f4f6;
-            border-top: 4px solid transparent;
-            border-radius: 50%;
-            background: conic-gradient(from 0deg, #667eea, #764ba2, #667eea);
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        #loadingOverlay {
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        #loadingOverlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* 字符导航栏样式 */
-        .character-nav-btn {
-            min-width: 40px;
-            white-space: nowrap;
-        }
-        
-        /* 移动端优化 */
-        @media (max-width: 640px) {
-            .character-nav-btn {
-                min-width: 36px;
-                padding: 8px 12px;
-                font-size: 12px;
-            }
-            
-            #characterNavigation {
-                padding: 12px;
-            }
-            
-            #characterNavigation .text-sm {
-                font-size: 12px;
-                margin-bottom: 8px;
-            }
-        }
-        
-        /* 超小屏幕优化 */
-        @media (max-width: 480px) {
-            .character-nav-btn {
-                min-width: 32px;
-                padding: 6px 10px;
-                font-size: 11px;
-            }
-        }
-    </style>
-
-    <!-- Footer -->
     <footer class="bg-gray-100 border-t border-gray-200 py-6 mt-auto">
         <div class="container mx-auto px-4 text-center">
             <div class="flex flex-row items-center justify-center gap-2 text-sm text-gray-600">
@@ -892,6 +324,7 @@
             </div>
         </div>
     </footer>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 
 </html>
