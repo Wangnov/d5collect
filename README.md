@@ -1,213 +1,158 @@
 # D5Collect - 谐音字皮肤查询工具
 
-## 项目简介
+D5Collect 是一个基于 Flask 开发的 Web 应用，专为《第五人格》游戏玩家设计。它能根据用户输入的汉字或字母，利用拼音匹配原理，快速查找具有相似发音首字的游戏皮肤，帮助玩家轻松实现“藏头诗”等创意皮肤搭配。
 
-D5Collect是一个基于Flask的Web应用，专为第五人格游戏玩家设计，可以根据输入的汉字或字母，查找与之发音相似的游戏角色皮肤。该工具利用拼音匹配原理，帮助玩家快速找到谐音字开头的皮肤，展示在收集页面中形成藏头的效果。
+**在线体验**: [第五人格谐音字皮肤查询工具](https://d5collect.narakapve.com/)
 
-可在这里体验项目：[第五人格谐音字皮肤查询工具](https://d5collect.narakapve.com/)
+## ✨ 功能特点
 
-## 功能特点
+  * **核心功能 - 谐音匹配**: 输入任意句子，即可查找每个字对应的同音及谐音皮肤。
+  * **精准高亮**: 在搜索结果中，与输入字完全匹配的皮肤将以黄色高亮突出显示。
+  * **强大筛选**: 在客户端动态按**品质**和**角色**进行多重筛选，无需刷新页面。
+  * **统计后台 (Dashboard)**: 内置一个受密码保护的统计后台，通过图表和列表展示网站的详细使用情况，如总请求数、独立访客趋势、热门IP等。
+  * **动态刷新与动画**: Dashboard 页面支持每3秒自动刷新和手动刷新，并配有平滑的数字增长及列表项更新动画。
+  * **自动化数据更新**: 提供了独立的 Python 脚本 (`scripts/update_data.py`)，可一键从 Bilibili Wiki 抓取最新的皮肤数据。
+  * **现代化技术栈**: 采用 Flask 应用工厂模式构建，后端逻辑清晰，前端使用 Tailwind CSS 保证了界面的美观与响应式。
+  * **高效数据库查询**: 所有皮肤数据预处理后存入 SQLite 数据库，并建立了拼音索引，确保了高效的搜索响应速度。
 
-- **谐音字匹配**：根据输入的文字，查找发音相似的游戏皮肤
-- **精确匹配高亮**：完全匹配的结果会有特殊高亮显示
-- **筛选功能**：支持按品质和角色筛选结果
-- **响应式设计**：适配各种设备屏幕大小
-- **直观的结果展示**：以图文并茂的方式展示匹配结果
-- **模块化架构**：采用Flask应用工厂模式，代码结构清晰
-- **数据库支持**：使用SQLite存储搜索记录和统计信息
+## 🛠️ 技术栈
 
-## 项目结构
+  * **后端**: Flask, Gunicorn
+  * **数据库**: SQLite
+  * **拼音处理**: `pypinyin`
+  * **数据抓取**: `requests`, `BeautifulSoup4`
+  * **前端**: HTML5, Tailwind CSS, Chart.js, Luxon.js, Font Awesome, Vanilla JavaScript
+  * **配置**: TOML
+
+## 🏗️ 项目结构
 
 ```
 d5collect/
-├── run.py                    # 应用入口点
+├── run.py                    # 应用入口
 ├── app/                      # 主应用模块
-│   ├── __init__.py          # Flask应用工厂
-│   ├── config.py            # 配置文件
-│   └── routes/              # 路由模块
-│       ├── __init__.py
-│       └── main.py          # 主路由
-├── database/                 # 数据库相关
-│   ├── __init__.py
-│   ├── models.py            # 数据库模型和操作
-│   └── migrations/          # 数据库迁移脚本
-│       └── migrate_costumes.py
+│   ├── __init__.py           # Flask应用工厂
+│   ├── config.py             # 环境配置
+│   └── routes/               # 路由蓝图
+│       ├── main.py           # 主站路由
+│       └── dashboard.py      # Dashboard路由
+├── database/                 # 数据库模块
+│   ├── models.py             # 数据库模型与操作函数
+│   └── migrations/           # 数据库迁移脚本
 ├── data/                     # 数据文件
-│   └── costumes_data.json   # 皮肤数据
-├── scripts/                  # 工具脚本
-│   ├── pinyin.py            # 拼音处理工具
-│   └── update_data.py       # 数据更新脚本
+│   └── costumes_data.json    # 原始皮肤数据
+├── scripts/                  # 辅助脚本
+│   └── update_data.py        # 数据更新脚本
 ├── deployment/               # 部署配置
-│   └── gunicorn_config.py   # Gunicorn配置
+│   └── gunicorn_config.py    # Gunicorn生产环境配置
 ├── templates/                # HTML模板
-│   └── index.html
-├── static/                   # 静态资源
-├── logs/                     # 日志文件
+│   ├── index.html
+│   ├── login.html
+│   └── dashboard.html
 ├── requirements.txt          # Python依赖
-└── README.md                # 项目说明
+└── main_config.toml          # (需手动创建)主配置文件
 ```
 
-## 安装说明
+## 🚀 安装与启动
 
-### 前提条件
-
-- Python 3.7+
-- pip (Python包管理工具)
-
-### 安装步骤
-
-1. 克隆或下载本项目到本地
-
-2. 创建并激活虚拟环境（推荐）
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # Linux/Mac
-   # 或
-   .venv\Scripts\activate  # Windows
-   ```
-
-3. 安装依赖包
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. 初始化数据库（可选）
-   ```bash
-   python database/migrations/migrate_costumes.py
-   ```
-
-## 使用方法
-
-### 开发环境
+#### 1\. 克隆项目
 
 ```bash
-python run.py
+git clone https://github.com/Wangnov/d5collect.git
+cd d5collect
 ```
 
-### 生产环境
+#### 2\. 创建并激活虚拟环境
 
-使用Gunicorn部署：
 ```bash
-gunicorn -c deployment/gunicorn_config.py run:app
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
+
+# macOS / Linux
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
-### 访问应用
+#### 3\. 安装依赖
 
-在浏览器中访问：`http://127.0.0.1:9876/`
-
-### 使用步骤
-
-1. 在搜索框中输入想要查询的文字
-2. 点击"查找"按钮
-3. 查看匹配结果
-4. 使用筛选功能按品质或角色筛选结果
-
-## 数据管理
-
-### 皮肤数据
-
-项目使用`data/costumes_data.json`文件存储皮肤数据，包含：
-- 角色名称
-- 皮肤名称
-- 皮肤品质
-- 皮肤图片URL
-- Wiki链接
-
-### 数据库
-
-使用SQLite数据库存储：
-- 搜索记录
-- 用户统计
-- 系统日志
-
-### 数据更新
-
-使用脚本更新皮肤数据：
 ```bash
-python scripts/update_data.py
+pip install -r requirements.txt
 ```
 
-## 技术栈
+#### 4\. 配置应用
 
-- **后端框架**：Flask 2.x
-- **应用架构**：Flask应用工厂模式
-- **数据库**：SQLite
-- **拼音处理**：pypinyin
-- **前端**：HTML5, Tailwind CSS, JavaScript
-- **部署**：Gunicorn
-- **数据抓取**：requests, beautifulsoup4
+应用需要一个主配置文件来设置 Dashboard 的登录凭据。您需要从模板文件复制一份。
 
-## 配置说明
+```bash
+# 从模板复制一份配置文件
+cp main_config_template.toml main_config.toml
+```
 
-应用支持多环境配置，在`app/config.py`中定义：
+然后打开 `main_config.toml` 文件，**务必修改**默认的 `password`。
 
-- **开发环境**：`DevelopmentConfig`
-- **生产环境**：`ProductionConfig`
-- **测试环境**：`TestingConfig`
+```toml
+[dashboard]
+username = "admin"
+password = "your_strong_password_here"
+```
 
-通过环境变量`FLASK_ENV`控制配置选择。
+#### 5\. 初始化数据库
 
-## 开发指南
+首次运行时，需要创建并填充数据库。此脚本会读取 `data/costumes_data.json` 并将其载入 SQLite。
 
-### 添加新路由
+```bash
+python database/migrations/migrate_costumes.py
+```
 
-在`app/routes/`目录下创建新的路由模块，并在`app/routes/__init__.py`中注册。
+#### 6\. 运行应用
 
-### 数据库操作
+  * **开发环境**:
 
-所有数据库相关操作都在`database/models.py`中定义，使用连接池管理数据库连接。
+    ```bash
+    python run.py
+    ```
 
-### 日志记录
+    应用将在 `http://127.0.0.1:9877` 上运行。
 
-应用日志存储在`logs/`目录下，支持按日期轮转。
+  * **生产环境 (推荐)**:
+    使用 Gunicorn 启动，它会读取 `deployment/gunicorn_config.py` 中的配置。
 
-## 部署说明
+    ```bash
+    gunicorn -c deployment/gunicorn_config.py run:app
+    ```
 
-### 生产环境部署
+    应用将在 `http://127.0.0.1:9876` 上运行。
 
-1. 设置环境变量：
-   ```bash
-   export FLASK_ENV=production
-   ```
+  * **访问应用**:
 
-2. 使用Gunicorn启动：
-   ```bash
-   gunicorn -c deployment/gunicorn_config.py run:app
-   ```
+      * 主站: `http://<your_ip>:<port>/`
+      * 后台: `http://<your_ip>:<port>/dashboard`
 
-### Docker部署（可选）
+## 📊 数据管理
 
-项目支持Docker容器化部署，可根据需要创建Dockerfile。
+本应用的数据流是独立的，以确保数据的准确性和时效性。
 
-## 贡献指南
+1.  **抓取新数据**:
+    运行 `update_data.py` 脚本，它会从 BWIKI 抓取最新的皮肤数据并保存到 `costumes_data_updated.json`。
 
-1. Fork本项目
-2. 创建功能分支：`git checkout -b feature/new-feature`
-3. 提交更改：`git commit -am 'Add new feature'`
-4. 推送分支：`git push origin feature/new-feature`
-5. 创建Pull Request
+    ```bash
+    python scripts/update_data.py
+    ```
 
-## 问题反馈
+2.  **更新本地数据**:
+    抓取完成后，用新生成的 `costumes_data_updated.json` 文件**覆盖**原有的 `data/costumes_data.json`。
 
-如遇到问题或有功能建议，请通过以下方式反馈：
-- 提交Issue
-- 发送邮件
-- 在线反馈
+3.  **同步到数据库**:
+    再次运行数据库迁移脚本，将更新后的 JSON 数据同步到 SQLite 数据库中。
 
-## 许可证
+    ```bash
+    python database/migrations/migrate_costumes.py
+    ```
+
+## 🤝 贡献
+
+欢迎通过 Fork 和 Pull Request 的方式为本项目做出贡献。如果您发现了 Bug 或有任何建议，请随时提交 Issue。
+
+## 📄 许可证
 
 本项目采用 [MIT](https://opensource.org/licenses/MIT) 许可证。
-
-## 更新日志
-
-### v2.0.0
-- 重构项目结构，采用模块化设计
-- 实现Flask应用工厂模式
-- 添加数据库支持
-- 优化配置管理
-- 改进部署方式
-
-### v1.0.0
-- 初始版本发布
-- 基础谐音字匹配功能
-- Web界面实现
