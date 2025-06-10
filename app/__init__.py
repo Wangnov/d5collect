@@ -14,7 +14,7 @@ import shutil
 try:
     import tomllib  # 优先使用 Python 3.11+ 的标准库
 except ImportError:
-    import tomli as tomllib # 在低版本中回退到 tomli，并使用相同名称
+    import tomli as tomllib # type: ignore # 在低版本中回退到 tomli，并使用相同名称
 
 from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
