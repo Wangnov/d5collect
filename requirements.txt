@@ -1,20 +1,20 @@
 # Flask Web Framework
-Flask>=2.0.0
+Flask>=3.0.0
 
 # Chinese Pinyin Processing
-pypinyin>=0.44.0
+pypinyin>=0.54.0
 
 # WSGI HTTP Server
-gunicorn>=20.1.0
+gunicorn>=23.0.0
 
 # HTTP Library for Data Scraping
-requests>=2.25.0
+requests>=2.32.0
 
 # HTML/XML Parser for Web Scraping
-beautifulsoup4>=4.9.0
+beautifulsoup4>=4.13.0
 
 # WSGI Utilities
-Werkzeug>=2.0.0,<3.0.0
+Werkzeug>=3.0.0
 
 # TOML parser for Python < 3.11 (used as a fallback for tomllib)
 tomli; python_version < "3.11"

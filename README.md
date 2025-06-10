@@ -1,158 +1,348 @@
-# D5Collect - 谐音字皮肤查询工具
+# 第五人格皮肤首字母查询系统
 
-D5Collect 是一个基于 Flask 开发的 Web 应用，专为《第五人格》游戏玩家设计。它能根据用户输入的汉字或字母，利用拼音匹配原理，快速查找具有相似发音首字的游戏皮肤，帮助玩家轻松实现“藏头诗”等创意皮肤搭配。
+**版本**: v1.0.0
 
-**在线体验**: [第五人格谐音字皮肤查询工具](https://d5collect.narakapve.com/)
+一个基于 Flask 的第五人格皮肤首字母查询工具，支持拼音搜索和管理仪表板功能。
 
-## ✨ 功能特点
+## 🌟 功能特性
 
-  * **核心功能 - 谐音匹配**: 输入任意句子，即可查找每个字对应的同音及谐音皮肤。
-  * **精准高亮**: 在搜索结果中，与输入字完全匹配的皮肤将以黄色高亮突出显示。
-  * **强大筛选**: 在客户端动态按**品质**和**角色**进行多重筛选，无需刷新页面。
-  * **统计后台 (Dashboard)**: 内置一个受密码保护的统计后台，通过图表和列表展示网站的详细使用情况，如总请求数、独立访客趋势、热门IP等。
-  * **动态刷新与动画**: Dashboard 页面支持每3秒自动刷新和手动刷新，并配有平滑的数字增长及列表项更新动画。
-  * **自动化数据更新**: 提供了独立的 Python 脚本 (`scripts/update_data.py`)，可一键从 Bilibili Wiki 抓取最新的皮肤数据。
-  * **现代化技术栈**: 采用 Flask 应用工厂模式构建，后端逻辑清晰，前端使用 Tailwind CSS 保证了界面的美观与响应式。
-  * **高效数据库查询**: 所有皮肤数据预处理后存入 SQLite 数据库，并建立了拼音索引，确保了高效的搜索响应速度。
+- **智能拼音查询**: 支持皮肤名称的拼音首字母快速查询
+- **管理仪表板**: 提供用户请求统计和数据分析
+- **请求日志**: 完整记录用户查询历史和系统运行状态
+- **响应式设计**: 使用 Tailwind CSS 构建的现代化用户界面
+- **生产就绪**: 支持 Gunicorn 生产环境部署
+- **配置灵活**: 支持多环境配置和外部配置文件
 
 ## 🛠️ 技术栈
 
-  * **后端**: Flask, Gunicorn
-  * **数据库**: SQLite
-  * **拼音处理**: `pypinyin`
-  * **数据抓取**: `requests`, `BeautifulSoup4`
-  * **前端**: HTML5, Tailwind CSS, Chart.js, Luxon.js, Font Awesome, Vanilla JavaScript
-  * **配置**: TOML
+- **后端框架**: Flask 2.0+ (使用应用工厂模式)
+- **数据库**: SQLite 3 (带连接池优化)
+- **WSGI服务器**: Gunicorn (生产环境)
+- **前端框架**: Tailwind CSS
+- **中文处理**: pypinyin
+- **HTTP客户端**: requests
+- **HTML解析**: BeautifulSoup4
+- **静态文件**: WhiteNoise
+- **配置管理**: TOML
 
-## 🏗️ 项目结构
+## 📁 项目结构
 
 ```
 d5collect/
-├── run.py                    # 应用入口
-├── app/                      # 主应用模块
-│   ├── __init__.py           # Flask应用工厂
-│   ├── config.py             # 环境配置
-│   └── routes/               # 路由蓝图
-│       ├── main.py           # 主站路由
-│       └── dashboard.py      # Dashboard路由
-├── database/                 # 数据库模块
-│   ├── models.py             # 数据库模型与操作函数
-│   └── migrations/           # 数据库迁移脚本
-├── data/                     # 数据文件
-│   └── costumes_data.json    # 原始皮肤数据
-├── scripts/                  # 辅助脚本
-│   └── update_data.py        # 数据更新脚本
-├── deployment/               # 部署配置
-│   └── gunicorn_config.py    # Gunicorn生产环境配置
-├── templates/                # HTML模板
-│   ├── index.html
-│   ├── login.html
-│   └── dashboard.html
-├── requirements.txt          # Python依赖
-└── main_config.toml          # (需手动创建)主配置文件
+├── app/                    # Flask 应用主目录
+│   ├── __init__.py        # 应用工厂和配置
+│   ├── routes/            # 路由模块
+│   │   └── main.py        # 主要路由处理
+│   └── templates/         # Jinja2 模板
+│       └── index.html     # 主页模板
+├── database/              # 数据库相关
+│   └── models.py          # 数据库模型和连接池
+├── logs/                  # 日志文件目录
+├── config.py              # 配置类定义
+├── dashboard.py           # 仪表板功能
+├── run.py                 # 应用启动入口
+├── requirements.txt       # Python 依赖
+├── main_config_template.toml  # 配置模板
+└── README.md              # 项目文档
 ```
 
-## 🚀 安装与启动
+## 🚀 快速开始
 
-#### 1\. 克隆项目
+### 环境要求
+
+- Python 3.7+
+- pip
+
+### 安装依赖
 
 ```bash
-git clone https://github.com/Wangnov/d5collect.git
+# 克隆项目
+git clone <repository-url>
 cd d5collect
-```
 
-#### 2\. 创建并激活虚拟环境
+# 创建虚拟环境 (推荐)
+python -m venv venv
 
-```bash
+# 激活虚拟环境
 # Windows
-python -m venv .venv
-.venv\Scripts\activate
+venv\Scripts\activate
+# Linux/macOS
+source venv/bin/activate
 
-# macOS / Linux
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-#### 3\. 安装依赖
-
-```bash
+# 安装依赖
 pip install -r requirements.txt
 ```
 
-#### 4\. 配置应用
+### 配置设置
 
-应用需要一个主配置文件来设置 Dashboard 的登录凭据。您需要从模板文件复制一份。
-
+1. **复制配置模板**:
 ```bash
-# 从模板复制一份配置文件
 cp main_config_template.toml main_config.toml
 ```
 
-然后打开 `main_config.toml` 文件，**务必修改**默认的 `password`。
-
+2. **编辑配置文件** (`main_config.toml`):
 ```toml
 [dashboard]
-username = "admin"
-password = "your_strong_password_here"
+username = "your_username"    # 仪表板登录用户名
+password = "your_password"    # 仪表板登录密码
 ```
 
-#### 5\. 初始化数据库
-
-首次运行时，需要创建并填充数据库。此脚本会读取 `data/costumes_data.json` 并将其载入 SQLite。
+### 开发环境运行
 
 ```bash
-python database/migrations/migrate_costumes.py
+# 直接运行
+python run.py
+
+# 或使用 Flask 开发服务器
+set FLASK_APP=run.py
+set FLASK_ENV=development
+flask run
 ```
 
-#### 6\. 运行应用
+应用将在 `http://localhost:9877` 启动。
 
-  * **开发环境**:
+## 🔧 配置说明
 
-    ```bash
-    python run.py
-    ```
+### 环境配置
 
-    应用将在 `http://127.0.0.1:9877` 上运行。
+项目支持多环境配置，通过 `FLASK_ENV` 环境变量控制：
 
-  * **生产环境 (推荐)**:
-    使用 Gunicorn 启动，它会读取 `deployment/gunicorn_config.py` 中的配置。
+- `development`: 开发环境 (默认)
+- `production`: 生产环境
+- `testing`: 测试环境
 
-    ```bash
-    gunicorn -c deployment/gunicorn_config.py run:app
-    ```
+### 配置参数
 
-    应用将在 `http://127.0.0.1:9876` 上运行。
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `SECRET_KEY` | Flask 密钥 | 随机生成 |
+| `DATABASE_FILE` | SQLite 数据库文件路径 | `database/app.db` |
+| `LOG_DIR` | 日志文件目录 | `logs` |
+| `HOST` | 服务器主机 | `0.0.0.0` |
+| `PORT` | 服务器端口 | `9877` |
 
-  * **访问应用**:
+## 📊 API 文档
 
-      * 主站: `http://<your_ip>:<port>/`
-      * 后台: `http://<your_ip>:<port>/dashboard`
+### 主要端点
 
-## 📊 数据管理
+#### 1. 主页查询
+- **URL**: `/`
+- **方法**: `GET`, `POST`
+- **功能**: 皮肤首字母查询
+- **参数**: 
+  - `text` (POST): 查询文本
 
-本应用的数据流是独立的，以确保数据的准确性和时效性。
+#### 2. 仪表板
+- **URL**: `/dashboard`
+- **方法**: `GET`
+- **功能**: 管理仪表板主页
+- **认证**: 需要登录
 
-1.  **抓取新数据**:
-    运行 `update_data.py` 脚本，它会从 BWIKI 抓取最新的皮肤数据并保存到 `costumes_data_updated.json`。
+#### 3. 仪表板登录
+- **URL**: `/dashboard/login`
+- **方法**: `GET`, `POST`
+- **功能**: 仪表板用户认证
 
-    ```bash
-    python scripts/update_data.py
-    ```
+#### 4. 仪表板登出
+- **URL**: `/dashboard/logout`
+- **方法**: `POST`
+- **功能**: 用户登出
 
-2.  **更新本地数据**:
-    抓取完成后，用新生成的 `costumes_data_updated.json` 文件**覆盖**原有的 `data/costumes_data.json`。
+## 🚀 生产部署
 
-3.  **同步到数据库**:
-    再次运行数据库迁移脚本，将更新后的 JSON 数据同步到 SQLite 数据库中。
+### 使用 Gunicorn
 
-    ```bash
-    python database/migrations/migrate_costumes.py
-    ```
+项目提供了专门的 Gunicorn 配置文件 `deployment/gunicorn_config.py`，推荐使用配置文件启动：
 
-## 🤝 贡献
+```bash
+# 使用配置文件启动 (推荐)
+gunicorn -c deployment/gunicorn_config.py run:app
 
-欢迎通过 Fork 和 Pull Request 的方式为本项目做出贡献。如果您发现了 Bug 或有任何建议，请随时提交 Issue。
+# 基本启动
+gunicorn -w 4 -b 0.0.0.0:9876 run:app
+
+# 手动配置启动
+gunicorn \
+  --workers 4 \
+  --worker-class sync \
+  --bind 0.0.0.0:9876 \
+  --timeout 120 \
+  --access-logfile logs/access.log \
+  --error-logfile logs/error.log \
+  --log-level info \
+  run:app
+```
+
+应用将在 `http://localhost:9876` 启动。
+
+### Nginx 反向代理配置
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+    
+    location / {
+        proxy_pass http://127.0.0.1:9876;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # 禁用缓冲以提高响应速度
+        proxy_buffering off;
+        
+        # 忽略客户端中断
+        proxy_ignore_client_abort on;
+    }
+    
+    # 静态文件处理
+    location /static {
+        alias /path/to/your/app/static;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+### Systemd 服务配置
+
+创建 `/etc/systemd/system/d5collect.service`:
+
+```ini
+[Unit]
+Description=D5 Collect Flask App
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/d5collect
+Environment="PATH=/path/to/d5collect/venv/bin"
+Environment="FLASK_ENV=production"
+ExecStart=/path/to/d5collect/venv/bin/gunicorn -c deployment/gunicorn_config.py run:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+启动服务:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable d5collect
+sudo systemctl start d5collect
+```
+
+## 🗄️ 数据库
+
+### 数据库结构
+
+项目使用 SQLite 数据库，主要表结构：
+
+```sql
+CREATE TABLE requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    user_input TEXT,
+    search_results TEXT,
+    ip_address TEXT
+);
+
+CREATE INDEX idx_requests_timestamp ON requests(timestamp);
+CREATE INDEX idx_requests_ip ON requests(ip_address);
+```
+
+### 数据库连接池
+
+项目实现了 SQLite 连接池以提高性能：
+- 最大连接数: 10
+- 连接超时: 30秒
+- 自动重试机制
+
+## 📝 日志系统
+
+### 日志配置
+
+- **日志级别**: INFO (生产环境), DEBUG (开发环境)
+- **日志格式**: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`
+- **日志轮转**: 按大小轮转 (10MB)
+- **保留文件**: 5个备份文件
+
+### 日志文件
+
+- `logs/app.log`: 应用主日志
+- `logs/access.log`: 访问日志 (Gunicorn)
+- `logs/error.log`: 错误日志 (Gunicorn)
+
+## 🔍 故障排除
+
+### 常见问题
+
+1. **数据库锁定错误**
+   ```
+   解决方案: 检查数据库文件权限，确保应用有读写权限
+   ```
+
+2. **端口占用**
+   ```bash
+   # 查找占用端口的进程
+   netstat -ano | findstr :5000
+   # 终止进程
+   taskkill /PID <PID> /F
+   ```
+
+3. **依赖安装失败**
+   ```bash
+   # 升级 pip
+   python -m pip install --upgrade pip
+   # 清除缓存重新安装
+   pip install --no-cache-dir -r requirements.txt
+   ```
+
+4. **配置文件未找到**
+   ```
+   确保 main_config.toml 文件存在于项目根目录
+   检查文件权限和格式
+   ```
+
+### 性能优化
+
+1. **数据库优化**
+   - 定期清理旧日志数据
+   - 优化查询索引
+   - 使用连接池
+
+2. **应用优化**
+   - 启用 Gzip 压缩
+   - 配置静态文件缓存
+   - 使用 CDN 加速
+
+3. **服务器优化**
+   - 调整 Gunicorn worker 数量
+   - 配置适当的超时时间
+   - 监控内存使用情况
+
+## 🤝 贡献指南
+
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
 
 ## 📄 许可证
 
-本项目采用 [MIT](https://opensource.org/licenses/MIT) 许可证。
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 📞 支持
+
+如果您遇到问题或有建议，请：
+
+1. 查看 [故障排除](#-故障排除) 部分
+2. 搜索现有的 [Issues](../../issues)
+3. 创建新的 Issue 描述问题
+
+---
+
+**注意**: 本项目仅供学习和研究使用，请遵守相关法律法规。
