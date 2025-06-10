@@ -20,6 +20,8 @@ def index():
     try:
         input_text = None
         result = []
+        # 初始化 total_matches
+        total_matches = 0
         user_ip = request.remote_addr
 
         if request.method == 'POST':
@@ -27,7 +29,6 @@ def index():
             if input_text:
                 # 对输入的每个字符进行匹配
                 costumes = []
-                total_matches = 0
                 
                 for char in input_text:
                     # 跳过空格和标点符号
@@ -50,7 +51,8 @@ def index():
 
         return render_template('index.html', 
                             input_text=input_text,
-                            result=result)
+                            result=result,
+                            total_matches=total_matches)
 
     except Exception as e:
         logger.error(f"处理 / 路由时发生未知错误: {e}", exc_info=True)

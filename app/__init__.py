@@ -20,6 +20,7 @@ from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import generate_password_hash
 from logging.handlers import TimedRotatingFileHandler
+from whitenoise import WhiteNoise # 导入 WhiteNoise
 
 from .config import Config
 from database import init_db
@@ -49,7 +50,6 @@ def load_external_config(app):
     config_path = os.path.join(app.root_path, '..', 'main_config.toml')
     template_path = os.path.join(app.root_path, '..', 'main_config_template.toml')
 
-    # 检查配置文件是否存在
     if not os.path.exists(config_path):
         app.logger.warning(f"配置文件 '{config_path}' 不存在。")
         try:
@@ -65,7 +65,7 @@ def load_external_config(app):
     try:
         with open(config_path, 'rb') as f:
             config_data = tomllib.load(f)
-        
+
         dashboard_config = config_data.get('dashboard', {})
         username = dashboard_config.get('username')
         password = dashboard_config.get('password')
@@ -85,25 +85,28 @@ def create_app(config_class=Config):
     """应用工厂函数"""
     app = Flask(__name__, template_folder='../templates', static_folder='../static')
     app.config.from_object(config_class)
-    
+
     setup_logging(app)
 
     with app.app_context():
         load_external_config(app)
-    
+
+    # 使用 WhiteNoise 包装应用，使其能够处理静态文件
+    app.wsgi_app = WhiteNoise(app.wsgi_app, root=os.path.join(os.path.dirname(app.root_path), 'static'))
+
     app.wsgi_app = ProxyFix(
         app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
     )
 
     # 初始化数据库
     init_db()
-    
+
     # 注册主应用蓝图
     from .routes import bp as main_bp
     app.register_blueprint(main_bp)
-    
+
     # 注册 Dashboard 蓝图
     from .routes.dashboard import dashboard_bp
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
-    
+
     return app
