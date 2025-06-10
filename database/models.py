@@ -190,13 +190,21 @@ def get_request_stats(days: int = 7) -> Dict[str, Any]:
             )
             daily_stats = cursor.fetchall()
             
+            # 每日独立访客统计
+            cursor.execute(
+                "SELECT DATE(created_at) as date, COUNT(DISTINCT user_ip) as count FROM requests WHERE created_at >= ? GROUP BY DATE(created_at) ORDER BY date",
+                (start_date,)
+            )
+            daily_unique_visitors = cursor.fetchall()
+
             return {
                 'period_days': days,
                 'total_requests': total_requests,
                 'unique_ips': unique_ips,
                 'avg_matches': round(avg_matches, 2),
                 'top_ips': [{'ip': ip, 'count': count} for ip, count in top_ips],
-                'daily_stats': [{'date': date, 'count': count} for date, count in daily_stats]
+                'daily_stats': [{'date': date, 'count': count} for date, count in daily_stats],
+                'daily_unique_visitors': [{'date': date, 'count': count} for date, count in daily_unique_visitors]
             }
     except sqlite3.Error as e:
         logger.error(f"获取统计数据失败！错误: {e}", exc_info=True)

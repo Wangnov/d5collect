@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full bg-gray-100">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D5Collect - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+    <link rel="icon" type="image/png" href="https://webinput.nie.netease.com/img/id5/icon.png">
+    <style>
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 1.5rem;
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="h-full">
+    <div class="min-h-full">
+        <nav class="bg-gray-800">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="flex h-16 items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <img class="h-8 w-8" src="https://webinput.nie.netease.com/img/id5/icon.png"
+                                alt="D5Collect">
+                        </div>
+                        <div class="hidden md:block">
+                            <div class="ml-10 flex items-baseline space-x-4">
+                                <a href="#" class="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium"
+                                    aria-current="page">Dashboard</a>
+                                <a href="{{ url_for('main.index') }}"
+                                    class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">返回主站</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-4 flex items-center md:ml-6">
+                            <a href="{{ url_for('dashboard.logout') }}"
+                                class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">登出</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <header class="bg-white shadow">
+            <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <h1 class="text-3xl font-bold tracking-tight text-gray-900">使用情况统计</h1>
+            </div>
+        </header>
+
+        <main>
+            <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+                <div class="px-4 py-4 sm:px-0">
+                    <div class="mb-6">
+                        <div class="flex justify-end space-x-2">
+                            <a href="?days=1"
+                                class="px-3 py-1 text-sm rounded-md {{ 'bg-indigo-600 text-white' if active_days == 1 else 'bg-white text-gray-700' }}">24小时</a>
+                            <a href="?days=7"
+                                class="px-3 py-1 text-sm rounded-md {{ 'bg-indigo-600 text-white' if active_days == 7 else 'bg-white text-gray-700' }}">7天</a>
+                            <a href="?days=30"
+                                class="px-3 py-1 text-sm rounded-md {{ 'bg-indigo-600 text-white' if active_days == 30 else 'bg-white text-gray-700' }}">30天</a>
+                        </div>
+                    </div>
+
+                    <dl class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="card overflow-hidden">
+                            <dt class="truncate text-sm font-medium text-gray-500">总请求数</dt>
+                            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ stats.total_requests
+                                or 0 }}</dd>
+                        </div>
+                        <div class="card overflow-hidden">
+                            <dt class="truncate text-sm font-medium text-gray-500">独立访客 (IPs)</dt>
+                            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ stats.unique_ips or
+                                0 }}</dd>
+                        </div>
+                        <div class="card overflow-hidden">
+                            <dt class="truncate text-sm font-medium text-gray-500">平均匹配数/请求</dt>
+                            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ stats.avg_matches or
+                                0 }}</dd>
+                        </div>
+                        <div class="card overflow-hidden">
+                            <dt class="truncate text-sm font-medium text-gray-500">统计周期</dt>
+                            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ stats.period_days or
+                                'N/A' }} 天</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="card">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">每日请求趋势</h3>
+                        <div class="mt-4 h-80">
+                            <canvas id="requestChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">独立访客趋势</h3>
+                        <div class="mt-4 h-80">
+                            <canvas id="visitorsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="card">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">最活跃IP (Top 5)</h3>
+                        <ul role="list" class="mt-4 divide-y divide-gray-200">
+                            {% for ip in stats.top_ips %}
+                            <li class="flex py-3">
+                                <p class="text-sm font-medium text-gray-900">{{ ip.ip }}</p>
+                                <p class="ml-auto text-sm text-gray-500">{{ ip.count }} 次请求</p>
+                            </li>
+                            {% else %}
+                            <li class="py-3 text-sm text-gray-500">暂无数据</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">最近请求记录</h3>
+                        <div class="overflow-y-auto max-h-64 mt-4">
+                            <ul role="list" class="divide-y divide-gray-200">
+                                {% for req in recent_requests %}
+                                <li class="py-3">
+                                    <p class="text-sm font-medium text-gray-900 truncate"><strong>IP:</strong> {{
+                                        req.user_ip }} | <strong>输入:</strong> {{ req.input_text }}</p>
+                                    <p class="text-sm text-gray-500">{{ req.created_at }}</p>
+                                </li>
+                                {% else %}
+                                <li class="py-3 text-sm text-gray-500">暂无数据</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 图表通用配置
+            const lineChartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day',
+                            tooltipFormat: 'yyyy-MM-dd'
+                        },
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#e5e7eb' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            };
+
+            // 1. 每日请求数图表
+            const dailyData = JSON.parse('{{ daily_stats_json|safe }}');
+            const requestCtx = document.getElementById('requestChart').getContext('2d');
+            const requestChart = new Chart(requestCtx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: '每日请求数',
+                        data: dailyData.map(item => ({ x: item.date, y: item.count })),
+                        fill: true,
+                        borderColor: 'rgb(79, 70, 229)',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.3,
+                        pointBackgroundColor: 'rgb(79, 70, 229)',
+                        pointRadius: 4
+                    }]
+                },
+                options: lineChartOptions
+            });
+
+            // 2. 独立访客图表
+            const visitorsData = JSON.parse('{{ daily_visitors_json|safe }}');
+            const visitorsCtx = document.getElementById('visitorsChart').getContext('2d');
+            const visitorsChart = new Chart(visitorsCtx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: '独立访客数',
+                        data: visitorsData.map(item => ({ x: item.date, y: item.count })),
+                        fill: true,
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.3,
+                        pointBackgroundColor: 'rgb(34, 197, 94)',
+                        pointRadius: 4
+                    }]
+                },
+                options: lineChartOptions
+            });
+        });
+    </script>
+</body>
+
+</html>

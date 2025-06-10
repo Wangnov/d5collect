@@ -1,0 +1,8 @@
+# D5Collect 主配置文件模板
+# 当 main_config.toml 不存在时，应用将自动复制此模板来创建它。
+# 请根据需要修改新生成的 main_config.toml 文件中的值。
+
+[dashboard]
+# Dashboard 的登录凭据
+username = "admin"
+password = "changeme"

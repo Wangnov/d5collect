@@ -24,6 +24,11 @@ class Config:
     HOST = '0.0.0.0'
     PORT = 9877
 
+    # Dashboard 配置
+    DASHBOARD_USERNAME = 'wangnov'
+    # 'wangnov1' 的哈希值
+    DASHBOARD_PASSWORD_HASH = 'pbkdf2:sha256:600000$6T3hBzRB7VJQ5x6n$704ec54bbd046aefecc35992b7850e7f3ad2654211550648c09b63384de1e0ae'
+
 
 class DevelopmentConfig(Config):
     """开发环境配置"""
