@@ -41,21 +41,6 @@ def setup_logging(app):
     return logger
 
 
-def load_costume_data():
-    logger = logging.getLogger('my_app')
-    try:
-        with open('data/costumes_data.json', 'r', encoding='utf-8') as f:
-            costumes_data = json.load(f)
-        logger.info("皮肤数据 'costumes_data.json' 加载成功。")
-        return costumes_data
-    except FileNotFoundError:
-        logger.critical("致命错误: 皮肤数据文件 'data/costumes_data.json' 未找到！应用无法启动。")
-        exit()
-    except json.JSONDecodeError:
-        logger.critical("致命错误: 'data/costumes_data.json' 文件格式错误，无法解析！应用无法启动。")
-        exit()
-
-
 def load_external_config(app):
     """
     从 toml 文件加载外部配置。
@@ -109,15 +94,15 @@ def create_app(config_class=Config):
     app.wsgi_app = ProxyFix(
         app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
     )
-    
-    costumes_data = load_costume_data()
-    app.config['COSTUMES_DATA'] = costumes_data
-    
+
+    # 初始化数据库
     init_db()
     
+    # 注册主应用蓝图
     from .routes import bp as main_bp
     app.register_blueprint(main_bp)
     
+    # 注册 Dashboard 蓝图
     from .routes.dashboard import dashboard_bp
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     

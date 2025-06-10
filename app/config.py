@@ -13,10 +13,7 @@ class Config:
     
     # 数据库配置
     DATABASE_FILE = 'data/database.db'
-    
-    # 皮肤数据文件
-    COSTUMES_DATA_FILE = 'data/costumes_data.json'
-    
+        
     # 日志配置
     LOG_DIR = 'logs/app'
     
