@@ -5,7 +5,6 @@ Flask应用工厂
 """
 
 import os
-import json
 import logging
 import datetime
 import shutil
