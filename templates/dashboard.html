@@ -10,6 +10,9 @@
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
     <script
         src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="icon" type="image/png" href="https://webinput.nie.netease.com/img/id5/icon.png">
     <style>
         .card {
@@ -18,6 +21,34 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             padding: 1.5rem;
             transition: all 0.3s ease-in-out;
+        }
+
+        /* 列表项动画 */
+        @keyframes flash-bg {
+            from {
+                background-color: #fefce8;
+                /* Tailwind yellow-50 */
+            }
+
+            to {
+                background-color: transparent;
+            }
+        }
+
+        .flash-add {
+            animation: flash-bg 1.5s ease-out;
+        }
+
+        /* 移除列表项的过渡效果 */
+        .list-item {
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .list-item.fade-out {
+            opacity: 0;
+            transform: translateX(-20px);
         }
     </style>
 </head>
@@ -60,37 +91,46 @@
         <main>
             <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                 <div class="px-4 py-4 sm:px-0">
-                    <div class="mb-6">
-                        <div class="flex justify-end space-x-2">
-                            <a href="?days=1"
-                                class="px-3 py-1 text-sm rounded-md {{ 'bg-indigo-600 text-white' if active_days == 1 else 'bg-white text-gray-700' }}">24小时</a>
-                            <a href="?days=7"
-                                class="px-3 py-1 text-sm rounded-md {{ 'bg-indigo-600 text-white' if active_days == 7 else 'bg-white text-gray-700' }}">7天</a>
-                            <a href="?days=30"
-                                class="px-3 py-1 text-sm rounded-md {{ 'bg-indigo-600 text-white' if active_days == 30 else 'bg-white text-gray-700' }}">30天</a>
-                        </div>
+                    <div class="mb-6 flex justify-end items-center space-x-2">
+                        <button id="manual-refresh-btn"
+                            class="inline-flex items-center justify-center w-28 px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <span id="refresh-icon-container">
+                                <i class="fa-solid fa-arrows-rotate mr-1"></i>
+                            </span>
+                            <span id="spinner-icon-container" class="hidden">
+                                <i class="fa-solid fa-spinner fa-spin mr-1"></i>
+                            </span>
+                            <span id="refresh-text">手动刷新</span>
+                        </button>
+                        <a href="?days=1"
+                            class="px-3 py-1 text-sm rounded-md {{ 'bg-indigo-600 text-white' if active_days == 1 else 'bg-white text-gray-700' }}">24小时</a>
+                        <a href="?days=7"
+                            class="px-3 py-1 text-sm rounded-md {{ 'bg-indigo-600 text-white' if active_days == 7 else 'bg-white text-gray-700' }}">7天</a>
+                        <a href="?days=30"
+                            class="px-3 py-1 text-sm rounded-md {{ 'bg-indigo-600 text-white' if active_days == 30 else 'bg-white text-gray-700' }}">30天</a>
                     </div>
 
-                    <dl class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                    <dl class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4" id="stats-cards">
                         <div class="card overflow-hidden">
                             <dt class="truncate text-sm font-medium text-gray-500">总请求数</dt>
-                            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ stats.total_requests
+                            <dd data-key="total_requests"
+                                class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ stats.total_requests
                                 or 0 }}</dd>
                         </div>
                         <div class="card overflow-hidden">
                             <dt class="truncate text-sm font-medium text-gray-500">独立访客 (IPs)</dt>
-                            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ stats.unique_ips or
-                                0 }}</dd>
+                            <dd data-key="unique_ips" class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+                                {{ stats.unique_ips or 0 }}</dd>
                         </div>
                         <div class="card overflow-hidden">
                             <dt class="truncate text-sm font-medium text-gray-500">平均匹配数/请求</dt>
-                            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ stats.avg_matches or
-                                0 }}</dd>
+                            <dd data-key="avg_matches" class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+                                {{ "%.2f"|format((stats.avg_matches or 0)|float) }}</dd>
                         </div>
                         <div class="card overflow-hidden">
                             <dt class="truncate text-sm font-medium text-gray-500">统计周期</dt>
-                            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ stats.period_days or
-                                'N/A' }} 天</dd>
+                            <dd data-key="period_days" class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+                                {{ stats.period_days or 'N/A' }} 天</dd>
                         </div>
                     </dl>
                 </div>
@@ -111,14 +151,11 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div class="card">
                         <h3 class="text-lg font-medium leading-6 text-gray-900">最活跃IP (Top 5)</h3>
-                        <ul role="list" class="mt-4 divide-y divide-gray-200">
+                        <ul role="list" class="mt-4 divide-y divide-gray-200" id="top-ips-list">
                             {% for ip in stats.top_ips %}
-                            <li class="flex py-3">
+                            <li class="flex py-3 list-item" data-id="{{ ip.ip }}">
                                 <p class="text-sm font-medium text-gray-900">{{ ip.ip }}</p>
                                 <p class="ml-auto text-sm text-gray-500">{{ ip.count }} 次请求</p>
                             </li>
@@ -130,10 +167,10 @@
 
                     <div class="card">
                         <h3 class="text-lg font-medium leading-6 text-gray-900">最近请求记录</h3>
-                        <div class="overflow-y-auto max-h-64 mt-4">
-                            <ul role="list" class="divide-y divide-gray-200">
+                        <div class="overflow-y-auto max-h-80 mt-4">
+                            <ul role="list" class="divide-y divide-gray-200" id="recent-requests-list">
                                 {% for req in recent_requests %}
-                                <li class="py-3">
+                                <li class="py-3 list-item" data-id="{{ req.created_at }}">
                                     <p class="text-sm font-medium text-gray-900 truncate"><strong>IP:</strong> {{
                                         req.user_ip }} | <strong>输入:</strong> {{ req.input_text }}</p>
                                     <p class="text-sm text-gray-500">{{ req.created_at }}</p>
@@ -151,68 +188,187 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // 图表通用配置
-            const lineChartOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'day',
-                            tooltipFormat: 'yyyy-MM-dd'
-                        },
-                        grid: { display: false }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#e5e7eb' }
+            let requestChart, visitorsChart;
+            let isUpdating = false;
+
+            // --- 动画与工具函数 ---
+            function parseStatValue(text) {
+                return parseFloat(String(text).replace(/[,天\s]/g, '')) || 0;
+            }
+
+            function animateValue(obj, start, end, duration) {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    const currentVal = start + progress * (end - start);
+
+                    if (obj.dataset.key === 'avg_matches') {
+                        obj.textContent = parseFloat(currentVal).toFixed(2);
+                    } else if (obj.dataset.key === 'period_days') {
+                        obj.textContent = `${Math.floor(currentVal)} 天`;
+                    } else {
+                        obj.textContent = Math.floor(currentVal).toLocaleString();
                     }
-                },
-                plugins: {
-                    legend: { display: false }
+
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    } else {
+                        if (obj.dataset.key === 'avg_matches') {
+                            obj.textContent = parseFloat(end).toFixed(2);
+                        } else if (obj.dataset.key === 'period_days') {
+                            obj.textContent = `${end} 天`;
+                        } else {
+                            obj.textContent = end.toLocaleString();
+                        }
+                    }
+                };
+                window.requestAnimationFrame(step);
+            }
+
+            function updateAnimatedList(listElement, newItemsHtml) {
+                if (!listElement) return;
+                const newItemsContainer = new DOMParser().parseFromString(`<ul>${newItemsHtml}</ul>`, "text/html").querySelector('ul');
+                const newItems = Array.from(newItemsContainer.children);
+
+                const existingItemsMap = new Map();
+                Array.from(listElement.children).forEach(item => {
+                    if (item.dataset.id) existingItemsMap.set(item.dataset.id, item);
+                });
+
+                const newItemsMap = new Map();
+                newItems.forEach(item => {
+                    if (item.dataset.id) newItemsMap.set(item.dataset.id, item);
+                });
+
+                existingItemsMap.forEach((item, id) => {
+                    if (!newItemsMap.has(id)) {
+                        item.classList.add('fade-out');
+                        setTimeout(() => item.remove(), 500);
+                    }
+                });
+
+                newItems.reverse().forEach(newItem => {
+                    const id = newItem.dataset.id;
+                    if (!id) return;
+
+                    const existingItem = existingItemsMap.get(id);
+
+                    if (existingItem) {
+                        if (existingItem.innerHTML !== newItem.innerHTML) {
+                            existingItem.innerHTML = newItem.innerHTML;
+                            existingItem.classList.add('flash-add');
+                            setTimeout(() => existingItem.classList.remove('flash-add'), 1500);
+                        }
+                    } else {
+                        newItem.classList.add('flash-add');
+                        listElement.insertBefore(newItem, listElement.firstChild);
+                    }
+                });
+            }
+
+
+            // --- 图表初始化 ---
+            function initCharts(requestData, visitorsData) {
+                const lineChartOptions = {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'yyyy-MM-dd' }, grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#e5e7eb' } } },
+                    plugins: { legend: { display: false } }
+                };
+
+                requestChart = new Chart(document.getElementById('requestChart').getContext('2d'), {
+                    type: 'line',
+                    data: { datasets: [{ label: '每日请求数', data: requestData.map(item => ({ x: item.date, y: item.count })), fill: true, borderColor: 'rgb(79, 70, 229)', backgroundColor: 'rgba(79, 70, 229, 0.1)', tension: 0.3, pointRadius: 2 }] },
+                    options: lineChartOptions
+                });
+
+                visitorsChart = new Chart(document.getElementById('visitorsChart').getContext('2d'), {
+                    type: 'line',
+                    data: { datasets: [{ label: '独立访客数', data: visitorsData.map(item => ({ x: item.date, y: item.count })), fill: true, borderColor: 'rgb(34, 197, 94)', backgroundColor: 'rgba(34, 197, 94, 0.1)', tension: 0.3, pointRadius: 2 }] },
+                    options: lineChartOptions
+                });
+            }
+
+            function initialLoadAnimation() {
+                document.querySelectorAll('#stats-cards dd').forEach(ddElement => {
+                    const endValue = parseStatValue(ddElement.textContent);
+                    if (endValue > 0) {
+                        animateValue(ddElement, 0, endValue, 1000);
+                    }
+                });
+            }
+
+            // --- 核心更新逻辑 ---
+            async function updateDashboard() {
+                if (isUpdating) return;
+                isUpdating = true;
+
+                const btn = document.getElementById('manual-refresh-btn');
+                btn.disabled = true;
+                document.getElementById('refresh-icon-container').classList.add('hidden');
+                document.getElementById('spinner-icon-container').classList.remove('hidden');
+                document.getElementById('refresh-text').textContent = '更新中...';
+
+                try {
+                    const response = await fetch(window.location.href);
+                    if (!response.ok) throw new Error(`网络响应错误: ${response.statusText}`);
+                    const htmlText = await response.text();
+
+                    const newDoc = new DOMParser().parseFromString(htmlText, 'text/html');
+
+                    newDoc.querySelectorAll('#stats-cards dd').forEach(newDd => {
+                        const key = newDd.dataset.key;
+                        const currentDd = document.querySelector(`#stats-cards dd[data-key="${key}"]`);
+                        if (currentDd) {
+                            const oldValue = parseStatValue(currentDd.textContent);
+                            const newValue = parseStatValue(newDd.textContent);
+                            if (oldValue !== newValue) {
+                                animateValue(currentDd, oldValue, newValue, 800);
+                            }
+                        }
+                    });
+
+                    updateAnimatedList(document.getElementById('top-ips-list'), newDoc.getElementById('top-ips-list').innerHTML);
+                    updateAnimatedList(document.getElementById('recent-requests-list'), newDoc.getElementById('recent-requests-list').innerHTML);
+
+                    // 修正后的图表数据提取逻辑
+                    const newRequestData = JSON.parse(newDoc.querySelector('script').textContent.match(/const initialRequestData = JSON\.parse\('(.+?)'\);/)[1].replace(/&#34;/g, '"'));
+                    const newVisitorsData = JSON.parse(newDoc.querySelector('script').textContent.match(/const initialVisitorsData = JSON\.parse\('(.+?)'\);/)[1].replace(/&#34;/g, '"'));
+
+                    if (newRequestData) {
+                        requestChart.data.datasets[0].data = newRequestData.map(item => ({ x: item.date, y: item.count }));
+                        requestChart.update();
+                    }
+                    if (newVisitorsData) {
+                        visitorsChart.data.datasets[0].data = newVisitorsData.map(item => ({ x: item.date, y: item.count }));
+                        visitorsChart.update();
+                    }
+
+                } catch (error) {
+                    console.error("Dashboard更新失败:", error);
+                    document.getElementById('refresh-text').textContent = '更新失败';
+                    setTimeout(() => {
+                        document.getElementById('refresh-text').textContent = '手动刷新';
+                    }, 2000);
+                } finally {
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        document.getElementById('refresh-icon-container').classList.remove('hidden');
+                        document.getElementById('spinner-icon-container').classList.add('hidden');
+                        document.getElementById('refresh-text').textContent = '手动刷新';
+                        isUpdating = false;
+                    }, 500);
                 }
-            };
+            }
 
-            // 1. 每日请求数图表
-            const dailyData = JSON.parse('{{ daily_stats_json|safe }}');
-            const requestCtx = document.getElementById('requestChart').getContext('2d');
-            const requestChart = new Chart(requestCtx, {
-                type: 'line',
-                data: {
-                    datasets: [{
-                        label: '每日请求数',
-                        data: dailyData.map(item => ({ x: item.date, y: item.count })),
-                        fill: true,
-                        borderColor: 'rgb(79, 70, 229)',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                        tension: 0.3,
-                        pointBackgroundColor: 'rgb(79, 70, 229)',
-                        pointRadius: 4
-                    }]
-                },
-                options: lineChartOptions
-            });
+            // --- 初始化与事件绑定 ---
+            const initialRequestData = JSON.parse('{{ daily_stats_json|safe }}'.replace(/&#34;/g, '"'));
+            const initialVisitorsData = JSON.parse('{{ daily_visitors_json|safe }}'.replace(/&#34;/g, '"'));
+            initCharts(initialRequestData, initialVisitorsData);
+            initialLoadAnimation();
 
-            // 2. 独立访客图表
-            const visitorsData = JSON.parse('{{ daily_visitors_json|safe }}');
-            const visitorsCtx = document.getElementById('visitorsChart').getContext('2d');
-            const visitorsChart = new Chart(visitorsCtx, {
-                type: 'line',
-                data: {
-                    datasets: [{
-                        label: '独立访客数',
-                        data: visitorsData.map(item => ({ x: item.date, y: item.count })),
-                        fill: true,
-                        borderColor: 'rgb(34, 197, 94)',
-                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                        tension: 0.3,
-                        pointBackgroundColor: 'rgb(34, 197, 94)',
-                        pointRadius: 4
-                    }]
-                },
-                options: lineChartOptions
-            });
+            document.getElementById('manual-refresh-btn').addEventListener('click', updateDashboard);
+            setInterval(updateDashboard, 3000);
         });
     </script>
 </body>
